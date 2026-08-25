@@ -7,10 +7,15 @@ buildable templates.
 Point your agent at this folder and ask it for what you want. It will know the API instead of
 guessing at it.
 
-**Requires MZpack Strategies 4.x** (or Full Suite), not the Indicators package alone. Everything
-here is built on `MZpackStrategyBase` and the `MZpack.NT8.Algo` engine, which ship in
-`MZpack.NT8.Pro.dll` — that assembly comes with Strategies. Without it nothing in this corpus
-compiles. If you own Indicators only, see [Product Selection](https://www.mzpack.pro/product-selection/).
+**Requires MZpack Strategies** (or Full Suite) — not the Indicators package alone. Everything here
+is built on `MZpackStrategyBase` and the `MZpack.NT8.Algo` engine, which ship in
+`MZpack.NT8.Pro.dll`, and that assembly comes with Strategies. Without it nothing in this corpus
+compiles. If you own Indicators only, see
+[Product Selection](https://www.mzpack.pro/product-selection/).
+
+This corpus is written against **Strategies API 2.4.17**. Strategies has its own version line,
+separate from the Indicators one — so a 4.x Indicators installation tells you nothing about
+whether you have the strategy engine.
 
 Also required: NinjaTrader 8, .NET Framework 4.8, and MSBuild (Visual Studio Build Tools are
 enough — see below).
@@ -158,13 +163,15 @@ an unedited one does not.
 
 ## Version
 
-The corpus describes the MZpack Strategies 4.x API.
+The corpus is written against **Strategies API 2.4.17** — `MZpackStrategyBase.Version` in the
+installed assembly. Check yours against that number before you blame your agent for the code it
+produced.
 
 If `MZpack.NT8.Pro.dll` is not present at all, you have the Indicators package rather than
-Strategies — the strategy engine is a separate product.
+Strategies. The strategy engine is a separate product, and nothing here will build without it.
 
-If it is present but older than 4.x, the code your agent writes from this corpus will not compile
-against it. Update MZpack first.
+If it is present but older, some of what the corpus describes will not exist yet and the code will
+not compile. Update Strategies first.
 
 ---
 
