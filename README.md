@@ -87,8 +87,12 @@ code your agent writes from this corpus will not compile against it — update M
 **This corpus is provided as is.** It is free, it is not a supported product, and questions about
 building your own strategies are not covered by MZpack support.
 
-If you get stuck: **MZpack Research** (measuring and tuning your own signals) or the
-**Coding Service** (we build it for you) — see www.mzpack.pro.
+If you get stuck and want it built for you, that is what the **Coding Service** is for —
+see www.mzpack.pro.
 
-Found a mistake in the corpus, or a pitfall that is not written down? Tell us — corrections go
-straight back into this folder and everyone gets them.
+**MZpack Research** — measuring and tuning your own signals instead of guessing at them — is in
+development. If that is what you actually need, say so: what gets asked for shapes what gets built.
+
+Found a mistake in the corpus, or hit a pitfall that is not written down? Open an issue.
+Corrections go straight back into this repository and everybody gets them — `docs/pitfalls.md`
+is only as good as the reports behind it.
