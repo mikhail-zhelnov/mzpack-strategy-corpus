@@ -1,23 +1,91 @@
-MZpack Strategy Corpus — Terms of Use
+MZpack Strategy Corpus
+Terms of Use
 
-*** DRAFT — have this reviewed before the repository is made public. ***
+Copyright (c) 2015-2026 Mikhail Zhelnov / MZpack. All rights reserved.
 
-Copyright (c) 2015-2026 MZpack. All rights reserved.
 
-This corpus — documentation, sample source code and project templates — is provided to
-users of MZpack for NinjaTrader 8 as reference material for building their own strategies
-and indicators.
+1. WHAT THIS COVERS
 
-You may:
-  - use, copy and modify the sample code and the templates in your own projects,
-    including commercial ones, on a licensed MZpack installation;
-  - distribute your own derived strategies, in source or compiled form.
+These terms cover the contents of this repository: the documentation, the sample
+source code, the project templates and the build configuration — together, "the
+Corpus".
 
-You may not:
-  - redistribute this corpus, or substantial parts of it, as a standalone work;
-  - redistribute MZpack.NT8.Pro.dll or any NinjaTrader assembly.
+They do not cover the MZpack software itself. MZpack.NT8.Pro.dll and the rest of the
+MZpack product are licensed separately, under the terms you accepted when you obtained
+them. Nothing here grants you any right to that software.
 
-Provided "as is", without warranty of any kind, express or implied. Nothing in this corpus
-is trading advice. Trading futures involves substantial risk of loss.
+
+2. WHAT YOU MAY DO
+
+You may read, copy and keep the Corpus, for any purpose, at no cost. No licence key,
+no account and no registration is required.
+
+You may copy the sample code, the templates and the build configuration into your own
+NinjaTrader projects, modify them freely, and use the result for any purpose — including
+commercial trading and paid development work for other people.
+
+You may distribute the strategies and indicators you build this way, in source or
+compiled form, without attribution and without asking us.
+
+You may quote from the documentation, with attribution.
+
+
+3. WHAT YOU MAY NOT DO
+
+You may not redistribute the Corpus, or a substantial part of it, as a standalone work,
+a repackaged collection, or as part of a competing product or documentation set.
+Link to it instead.
+
+You may not redistribute MZpack.NT8.Pro.dll, any other MZpack assembly, or any
+NinjaTrader assembly — with or without the Corpus.
+
+You may not remove copyright notices from files you redistribute, present the Corpus or
+material derived from it as your own work, or imply that MZpack endorses, supports or
+has reviewed what you built with it.
+
+
+4. WHAT YOU WILL NEED
+
+The Corpus describes an API that ships with MZpack for NinjaTrader 8. Reading it costs
+nothing and requires nothing. Compiling and running the code requires a licensed
+installation of MZpack and of NinjaTrader 8. That is a practical requirement, not a
+condition of these terms.
+
+
+5. NO SUPPORT
+
+The Corpus is published as is. It is not a supported product, and questions about
+building your own strategies are not covered by MZpack support.
+
+
+6. NO WARRANTY
+
+THE CORPUS IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+The documentation may be incomplete or wrong, and the API it describes may change
+between releases.
+
+
+7. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL THE AUTHOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+OF OR IN CONNECTION WITH THE CORPUS OR THE USE OF OR OTHER DEALINGS IN THE CORPUS.
+
+This includes, without limitation, trading losses.
+
+
+8. NOT TRADING ADVICE
+
+Nothing in the Corpus is investment or trading advice, and no sample in it is a
+recommendation to trade in any way. The samples are illustrations of an API. They are
+not strategies that have been shown to be profitable, and they are not presented as
+such.
+
+Trading futures involves substantial risk of loss and is not suitable for every
+investor. Past performance is not indicative of future results.
+
 
 www.mzpack.pro
