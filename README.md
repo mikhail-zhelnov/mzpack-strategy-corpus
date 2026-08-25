@@ -46,6 +46,11 @@ PowerShell as above.
 If you would rather stay in an ordinary shell, `dotnet msbuild <project>.csproj` usually works.
 `docs/pitfalls.md` §11 has the recipe for locating MSBuild directly, for scripts and CI.
 
+> **Close NinjaTrader before you build.** While it is running it holds the assemblies in
+> `bin\Custom`, so the build cannot put yours there — and it still reports success. You get a clean
+> build and no strategy in the list. Build with NT8 closed, then start it: the DLL is copied for
+> you, there is nothing to move by hand.
+
 > Build the **template**, not the repository root. `samples/` is deliberately not part of any
 > project, and there is nothing to build at the top level.
 

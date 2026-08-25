@@ -288,6 +288,8 @@ References and the full list of types — `samples/export/`.
 ## 6. Build and deploy
 - Build: `msbuild <Name>.csproj`; if `msbuild` is not on PATH (no Developer console) — fall back to
   `dotnet msbuild <Name>.csproj`. Paths/references come from `Directory.Build.props`.
+- **NinjaTrader must be CLOSED during the build.** While it runs it holds the assemblies in
+  `bin\Custom`; the copy fails and the build still reports success.
 - After Build, the `DeployToNinjaTrader` target copies the DLL to `…\NinjaTrader 8\bin\Custom`.
   Disable it with: `-p:DeployToNinjaTrader=false` (CI, or building on a machine without NT8).
 - Do not launch NinjaTrader.exe from the build.

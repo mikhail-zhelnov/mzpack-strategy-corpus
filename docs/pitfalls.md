@@ -201,11 +201,18 @@ tools* workload, or Visual Studio Community.
 
 ## 12. The DLL builds but NinjaTrader does not see the strategy
 
-**Cause.** Either the deploy step was disabled (`-p:DeployToNinjaTrader=false`, which is correct
-for CI and for building elsewhere), or NinjaTrader is still holding the previous assembly.
+**Cause.** In almost every case: **NinjaTrader was running during the build.** While it runs it
+holds the assemblies in `bin\Custom`, so the `DeployToNinjaTrader` step cannot write your DLL over
+the old one — and the build still reports success. A clean build and no strategy in the list is
+this, nearly every time.
 
-**Fix.** Build with deploy enabled, then restart NinjaTrader. Do not launch NinjaTrader from the
-build — it interferes with agent and CI runs.
+The other cause is that deploy was switched off with `-p:DeployToNinjaTrader=false`, which is
+correct for CI and for building on a machine without NT8, and wrong here.
+
+**Fix.** Close NinjaTrader, build, start it again. The build copies the DLL into
+`Documents\NinjaTrader 8\bin\Custom` itself — there is nothing to move by hand.
+
+Do not launch NinjaTrader from the build; it interferes with agent and CI runs.
 
 ---
 
