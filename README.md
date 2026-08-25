@@ -22,6 +22,33 @@ Build Tools are enough).
 5. Build:  msbuild YourStrategy.csproj
 ```
 
+## Building, if you have never built a NinjaScript add-on
+
+You need MSBuild. Three ways, easiest first.
+
+**Install Visual Studio 2026 Community** — it is free. Open
+`templates/StrategyTemplate/StrategyTemplate.csproj` in it and build with Ctrl+Shift+B. Nothing to
+configure, and you get a debugger and IntelliSense over the MZpack API, which is worth having while
+you are still learning it.
+
+**Already have Visual Studio?** Open **Developer PowerShell for VS 2026** from the Start menu.
+MSBuild is on `PATH` there — it is *not* on `PATH` in an ordinary PowerShell window, which is the
+single most common first stumble:
+
+```
+msbuild templates\StrategyTemplate\StrategyTemplate.csproj
+```
+
+**Command line only, no IDE?** Install **Build Tools for Visual Studio** with the
+*.NET desktop build tools* workload — that is MSBuild without the IDE. Then use the Developer
+PowerShell as above.
+
+If you would rather stay in an ordinary shell, `dotnet msbuild <project>.csproj` usually works.
+`docs/pitfalls.md` §11 has the recipe for locating MSBuild directly, for scripts and CI.
+
+> Build the **template**, not the repository root. `samples/` is deliberately not part of any
+> project, and there is nothing to build at the top level.
+
 ### Claude Code
 
 Put the corpus inside your project folder, or add a `CLAUDE.md` at the project root:

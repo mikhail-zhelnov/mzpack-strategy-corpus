@@ -171,9 +171,31 @@ same project builds on any machine.
 
 ## 11. `msbuild` is not a recognised command
 
-**Cause.** You are not in a Developer command prompt.
+**Cause.** MSBuild is only on `PATH` inside the Visual Studio developer shell. In an ordinary
+PowerShell or cmd window it is not there, even with Visual Studio installed.
 
-**Fix.** `dotnet msbuild <Name>.csproj` works from an ordinary shell.
+**Fix, in order of effort.**
+
+Open **Developer PowerShell for VS** from the Start menu and build from there.
+
+Or use the SDK copy, which works from any shell:
+
+```
+dotnet msbuild <Name>.csproj
+```
+
+Or locate the real MSBuild yourself — the version to use in scripts and CI:
+
+```powershell
+$msb = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | Select-Object -First 1
+& $msb <Name>.csproj
+```
+
+If MSBuild is not installed at all: **Build Tools for Visual Studio** with the *.NET desktop build
+tools* workload, or Visual Studio Community.
+
+**Related.** Building the repository root does nothing — there is no project there. Build
+`templates\StrategyTemplate\StrategyTemplate.csproj`, or your own project.
 
 ---
 
