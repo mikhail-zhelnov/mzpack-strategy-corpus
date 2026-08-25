@@ -7,8 +7,13 @@ buildable templates.
 Point your agent at this folder and ask it for what you want. It will know the API instead of
 guessing at it.
 
-**Requires:** NinjaTrader 8, MZpack 4.x installed, .NET Framework 4.8, MSBuild (Visual Studio
-Build Tools are enough).
+**Requires MZpack Strategies 4.x** (or Full Suite), not the Indicators package alone. Everything
+here is built on `MZpackStrategyBase` and the `MZpack.NT8.Algo` engine, which ship in
+`MZpack.NT8.Pro.dll` — that assembly comes with Strategies. Without it nothing in this corpus
+compiles. If you own Indicators only, see [Product Selection](https://www.mzpack.pro/product-selection/).
+
+Also required: NinjaTrader 8, .NET Framework 4.8, and MSBuild (Visual Studio Build Tools are
+enough — see below).
 
 ---
 
@@ -153,8 +158,13 @@ an unedited one does not.
 
 ## Version
 
-The corpus describes the MZpack 4.x API. If your installed `MZpack.NT8.Pro.dll` is older, the
-code your agent writes from this corpus will not compile against it — update MZpack first.
+The corpus describes the MZpack Strategies 4.x API.
+
+If `MZpack.NT8.Pro.dll` is not present at all, you have the Indicators package rather than
+Strategies — the strategy engine is a separate product.
+
+If it is present but older than 4.x, the code your agent writes from this corpus will not compile
+against it. Update MZpack first.
 
 ---
 

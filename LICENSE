@@ -46,9 +46,10 @@ has reviewed what you built with it.
 
 4. WHAT YOU WILL NEED
 
-The Corpus describes an API that ships with MZpack for NinjaTrader 8. Reading it costs
-nothing and requires nothing. Compiling and running the code requires a licensed
-installation of MZpack and of NinjaTrader 8. That is a practical requirement, not a
+The Corpus describes an API that ships with MZpack Strategies for NinjaTrader 8. Reading it
+costs nothing and requires nothing. Compiling and running the code requires a licensed
+installation of MZpack Strategies (or Full Suite) and of NinjaTrader 8 — the Indicators
+package alone does not include the strategy engine. That is a practical requirement, not a
 condition of these terms.
 
 
