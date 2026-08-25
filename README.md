@@ -88,17 +88,61 @@ Add the corpus folder to the workspace and reference `AGENTS.md` in your rules f
 | `templates/` | Three buildable scaffolds: plain strategy, Pattern Dashboard, Control Panel. |
 | `Directory.Build.props` | Central paths to NinjaTrader and MZpack. Edit once, or set the environment variables. |
 
-## Set your paths once
+## Set your paths once — if you need to at all
 
-`Directory.Build.props` holds every reference. Either edit the defaults in it, or set:
+**Most people do not.** `Directory.Build.props` already assumes a standard installation:
 
 ```
-NINJATRADER_INSTALL   e.g. C:\Program Files\NinjaTrader 8
-NINJATRADER_USER      e.g. %USERPROFILE%\Documents\NinjaTrader 8
-MZPACK_DLL            e.g. %USERPROFILE%\Documents\NinjaTrader 8\bin\Custom\MZpack.NT8.Pro.dll
+NinjaTrader     %ProgramFiles%\NinjaTrader 8
+Your NT8 data   %USERPROFILE%\Documents\NinjaTrader 8
+MZpack          %USERPROFILE%\Documents\NinjaTrader 8\bin\Custom\MZpack.NT8.Pro.dll
 ```
 
-With the environment variables set, the build is portable and no `.csproj` needs editing.
+If that is where yours live, build the template and skip this section. Come back only if the build
+reports that it cannot find `MZpack.NT8.Pro` or `NinjaTrader.Core`.
+
+Every reference in every project comes from that one file — never from a `HintPath` in a `.csproj`.
+There are two ways to correct it.
+
+### The quick way: edit the file
+
+Open `Directory.Build.props` and change the three defaults at the top:
+`NinjaTraderInstall`, `NinjaTraderUser`, `MZpackDll`. Done — but the edit belongs to this copy of
+the corpus, and you will redo it the next time you pull or unzip a new version.
+
+### The durable way: environment variables
+
+Set them once for your Windows account and every project you ever build picks them up, on this
+machine, forever. Nothing to edit and nothing to redo.
+
+Paste this into PowerShell. The first three lines are the only ones you might need to change, and
+`Test-Path` tells you whether they are right **before** anything is written:
+
+```powershell
+$nt     = "$env:ProgramW6432\NinjaTrader 8"
+$ntUser = "$env:USERPROFILE\Documents\NinjaTrader 8"
+$mzpack = "$ntUser\bin\Custom\MZpack.NT8.Pro.dll"
+
+Test-Path $nt, $ntUser, $mzpack        # want three True; if not, fix the paths above and re-run
+
+[Environment]::SetEnvironmentVariable("NINJATRADER_INSTALL", $nt,     "User")
+[Environment]::SetEnvironmentVariable("NINJATRADER_USER",    $ntUser, "User")
+[Environment]::SetEnvironmentVariable("MZPACK_DLL",          $mzpack, "User")
+```
+
+A `False` here is worth a minute of your time. Setting a path that does not exist succeeds
+silently, and the mistake surfaces much later as `NinjaTrader.Core could not be found`, where it is
+far harder to connect to its cause.
+
+Or without a terminal: press Win, type *environment variables*, choose **Edit environment variables
+for your account**, and add the three under **User variables**.
+
+**Close and reopen your shell, Visual Studio included, afterwards.** Windows hands environment
+variables to processes when they start, so anything already running will not see the new values —
+which looks exactly like the setting not having worked.
+
+In the new window, `$env:MZPACK_DLL` should print your path back. If it prints nothing, the
+variable was set in a different account or the window is an old one.
 
 ## Samples do not compile as they stand
 
