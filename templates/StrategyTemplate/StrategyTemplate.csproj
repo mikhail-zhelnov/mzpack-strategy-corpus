@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <!--
+    Minimal .csproj. References to MZpack/NinjaTrader/SharpDX, TFM v4.8, x64, and NT8 deploy
+    are inherited from ..\..\Directory.Build.props. Only project-specific settings live here.
+  -->
+  <PropertyGroup>
+    <ProjectGuid>{00000000-0000-0000-0000-000000000001}</ProjectGuid>
+    <RootNamespace>StrategyTemplate</RootNamespace>
+    <AssemblyName>StrategyTemplate</AssemblyName>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <!-- OutputPath is required for the legacy csproj format (the Configuration|Platform validator).
+       Everything else (references/TFM/x64/deploy) is inherited from ..\..\Directory.Build.props. -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="StrategyTemplate.cs" />
+    <Compile Include="StrategyTemplateStrategy.cs" />
+    <Compile Include="Signals\TemplateSignal.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Filters\" />
+    <Folder Include="Actions\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

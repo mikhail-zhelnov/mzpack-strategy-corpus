@@ -1,0 +1,20 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+*.dll
+*.pdb
+*.user
+*.suo
+
+# VS / Rider
+.vs/
+.idea/
+
+# NuGet (legacy format)
+packages/
+*.nupkg
+
+# External assemblies — do NOT store in the repo (installed with NT8 / MZpack)
+**/MZpack.NT8.Pro.dll
+**/NinjaTrader.*.dll
+**/SharpDX*.dll

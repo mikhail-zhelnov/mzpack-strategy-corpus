@@ -1,0 +1,23 @@
+MZpack Strategy Corpus — Terms of Use
+
+*** DRAFT — have this reviewed before the repository is made public. ***
+
+Copyright (c) 2015-2026 MZpack. All rights reserved.
+
+This corpus — documentation, sample source code and project templates — is provided to
+users of MZpack for NinjaTrader 8 as reference material for building their own strategies
+and indicators.
+
+You may:
+  - use, copy and modify the sample code and the templates in your own projects,
+    including commercial ones, on a licensed MZpack installation;
+  - distribute your own derived strategies, in source or compiled form.
+
+You may not:
+  - redistribute this corpus, or substantial parts of it, as a standalone work;
+  - redistribute MZpack.NT8.Pro.dll or any NinjaTrader assembly.
+
+Provided "as is", without warranty of any kind, express or implied. Nothing in this corpus
+is trading advice. Trading futures involves substantial risk of loss.
+
+www.mzpack.pro

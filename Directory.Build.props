@@ -1,0 +1,105 @@
+﻿<Project>
+  <!--
+    Directory.Build.props — centralized configuration for ALL MZpack strategy projects.
+    MSBuild picks up this file automatically for every .csproj in the tree below,
+    including legacy (non-SDK) .NET Framework projects.
+
+    Purpose: remove machine-specific relative HintPaths
+    from each .csproj and define the paths to NT8 / MZpack in ONE place.
+
+    IMPORTANT: the paths below are defaults for a typical NT8 install. Verify them for your machine
+    (or override them via the NINJATRADER_INSTALL / NINJATRADER_USER / MZPACK_DLL environment
+    variables — then no edits to this file are needed and the build is portable across machines).
+  -->
+
+  <PropertyGroup>
+    <NinjaTraderInstall Condition="'$(NinjaTraderInstall)' == ''">$(NINJATRADER_INSTALL)</NinjaTraderInstall>
+    <NinjaTraderInstall Condition="'$(NinjaTraderInstall)' == ''">$(ProgramW6432)\NinjaTrader 8</NinjaTraderInstall>
+
+    <NinjaTraderUser Condition="'$(NinjaTraderUser)' == ''">$(NINJATRADER_USER)</NinjaTraderUser>
+    <NinjaTraderUser Condition="'$(NinjaTraderUser)' == ''">$(USERPROFILE)\Documents\NinjaTrader 8</NinjaTraderUser>
+
+    <NinjaTraderCustom>$(NinjaTraderUser)\bin\Custom</NinjaTraderCustom>
+
+    <MZpackDll Condition="'$(MZpackDll)' == ''">$(MZPACK_DLL)</MZpackDll>
+    <MZpackDll Condition="'$(MZpackDll)' == ''">$(NinjaTraderCustom)\MZpack.NT8.Pro.dll</MZpackDll>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputType>Library</OutputType>
+    <Deterministic>true</Deterministic>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">AnyCPU</Platform>
+
+    <!-- Legacy (non-SDK) projects do not set OutputPath automatically — we set it here
+         to avoid duplicating Configuration|Platform groups in every .csproj. -->
+    <OutputPath Condition="'$(OutputPath)' == ''">bin\$(Configuration)\</OutputPath>
+    <BaseOutputPath Condition="'$(BaseOutputPath)' == ''">bin\</BaseOutputPath>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">obj\$(Configuration)\</IntermediateOutputPath>
+
+    <!-- Debug/optimization settings per configuration -->
+    <DebugSymbols Condition="'$(Configuration)' == 'Debug'">true</DebugSymbols>
+    <DebugType Condition="'$(Configuration)' == 'Debug'">full</DebugType>
+    <DebugType Condition="'$(Configuration)' == 'Release'">pdbonly</DebugType>
+    <Optimize Condition="'$(Configuration)' == 'Debug'">false</Optimize>
+    <Optimize Condition="'$(Configuration)' == 'Release'">true</Optimize>
+    <DefineConstants Condition="'$(Configuration)' == 'Debug'">DEBUG;TRACE</DefineConstants>
+    <DefineConstants Condition="'$(Configuration)' == 'Release'">TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <!-- false => do not copy the DLL into NT8 after build (for CI / building at the client). -->
+    <DeployToNinjaTrader Condition="'$(DeployToNinjaTrader)' == ''">true</DeployToNinjaTrader>
+  </PropertyGroup>
+
+  <!--
+    Shared references. Private=false => the DLL is not copied into bin: the runtime takes them from
+    the installed NT8/MZpack. We do NOT commit the API and platform to the repo and do NOT ship them
+    to the client — they already have them.
+  -->
+  <ItemGroup>
+    <Reference Include="MZpack.NT8.Pro">
+      <HintPath>$(MZpackDll)</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="NinjaTrader.Core">
+      <HintPath>$(NinjaTraderInstall)\bin\NinjaTrader.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="NinjaTrader.Gui">
+      <HintPath>$(NinjaTraderInstall)\bin\NinjaTrader.Gui.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="NinjaTrader.Vendor">
+      <HintPath>$(NinjaTraderCustom)\NinjaTrader.Vendor.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SharpDX">
+      <HintPath>$(NinjaTraderInstall)\bin\SharpDX.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SharpDX.Direct2D1">
+      <HintPath>$(NinjaTraderInstall)\bin\SharpDX.Direct2D1.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+  </ItemGroup>
+
+  <!--
+    Deploy the built add-on into NT8 Custom (replaces the old PostBuildEvent with copy /Y).
+    We do NOT launch NinjaTrader from the build — it interferes with agent/CI builds.
+  -->
+  <Target Name="DeployToNinjaTrader" AfterTargets="Build" Condition="'$(DeployToNinjaTrader)' == 'true'">
+    <Copy SourceFiles="$(TargetPath)"
+          DestinationFolder="$(NinjaTraderCustom)"
+          OverwriteReadOnlyFiles="true"
+          SkipUnchangedFiles="false" />
+    <Message Importance="high" Text="Deployed $(TargetFileName) -> $(NinjaTraderCustom)" />
+  </Target>
+
+</Project>
