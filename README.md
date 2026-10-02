@@ -13,7 +13,7 @@ is built on `MZpackStrategyBase` and the `MZpack.NT8.Algo` engine, which ship in
 compiles. If you own Indicators only, see
 [Product Selection](https://www.mzpack.pro/product-selection/).
 
-Skill **1.0.2** is written against **Strategies API 2.4.17**. Strategies has its own version line,
+Skill **1.0.3** is written against **Strategies API 2.4.17**. Strategies has its own version line,
 separate from the Indicators one — so a 4.x Indicators installation tells you nothing about
 whether you have the strategy engine.
 
@@ -31,6 +31,14 @@ enough — see below).
 4. Ask: "add a delta divergence signal to this strategy, following AGENTS.md"
 5. Build:  msbuild YourStrategy.csproj
 ```
+
+### Download the latest release ZIP
+
+Download [the latest MZpack AI Skill ZIP](https://github.com/mikhail-zhelnov/mzpack-strategy-corpus/releases/latest/download/mzpack-ai-skill.zip),
+then extract it into your agent's skill directory so that `SKILL.md` is at
+`.codex\skills\mzpack-strategies\SKILL.md`, `.claude\skills\mzpack-strategies\SKILL.md`, or
+`.cursor\skills\mzpack-strategies\SKILL.md`. This URL always supplies the latest published skill;
+the versioned tags remain available when you need a specific, reproducible version.
 
 ## Building, if you have never built a NinjaScript add-on
 
@@ -70,7 +78,8 @@ Codex discovers a project skill under `.codex/skills/`, or a personal skill unde
 For a project-local install, clone this repository as:
 
 ```powershell
-git clone --branch skill-v1.0.2 --depth 1 https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .codex\skills\mzpack-strategies
+New-Item -ItemType Directory -Force .codex\skills | Out-Null
+git clone --branch skill-v1.0.3 --depth 1 https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .codex\skills\mzpack-strategies
 ```
 
 ### Claude Code
@@ -80,7 +89,7 @@ project, install it with:
 
 ```powershell
 New-Item -ItemType Directory -Force .claude\skills | Out-Null
-git clone --branch skill-v1.0.2 --depth 1 https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .claude\skills\mzpack-strategies
+git clone --branch skill-v1.0.3 --depth 1 https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .claude\skills\mzpack-strategies
 ```
 
 Then start Claude Code and ask for an MZpack strategy task, or invoke `/mzpack-strategies`.
@@ -107,7 +116,7 @@ install it with:
 
 ```powershell
 New-Item -ItemType Directory -Force .cursor\skills | Out-Null
-git clone --branch skill-v1.0.2 --depth 1 https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .cursor\skills\mzpack-strategies
+git clone --branch skill-v1.0.3 --depth 1 https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .cursor\skills\mzpack-strategies
 ```
 
 Open a new Agent chat and ask for an MZpack strategy task, or invoke `/mzpack-strategies`.
