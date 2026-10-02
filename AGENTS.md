@@ -1,7 +1,8 @@
 # AGENTS.md — how to write a trading strategy on the MZpack API (NinjaTrader 8)
 
 A guide for the AI agent (and developer). Read it in full before generating code.
-The mechanics below are confirmed against the API source (`MZpack.NT8\Algo`) and against real production
+This release targets **MZpack Strategies API 2.4.17** only. Do not use members introduced by a later API
+version. The mechanics below are confirmed against the `API-2.4.17` product source and against real production
 strategies (`FootprintAction`, `GhostResistance`).
 Reference examples are in `samples/`; the skeleton is in `templates/StrategyTemplate/`.
 
@@ -98,42 +99,32 @@ The engine resets the signal between calculations on its own (the `isReset` flag
 - `calculate` — `OnBarClose` or `OnEachTick`.
 - `hasPrice` — whether the signal price participates in the decision tree.
 
-### Hold your indicator, and declare what it must calculate
+### Hold your indicator, and configure what it must calculate
 Take the indicator through the constructor and keep it in a field. Reaching for it through the host
 (`((MyStrategy)Strategy.MZpackStrategy).SomeIndicator`) makes the signal unmovable between strategies.
 
 Part of the indicator data is calculated **only when the matching setting is on** — footprint absorptions,
 imbalance S/R zones, bar value area, session value area, delta rate and others. A signal reading such data
-without declaring it reads nothing on every bar and is indistinguishable from a signal that never fires. This
-has bitten the product twice already.
+without enabling its calculation reads nothing on every bar and is indistinguishable from a signal that never
+fires.
+
+MZpack Strategies API 2.4.17 has no `DeclareRequirements()` / `Require(...)` capability API. Configure the
+indicator directly in the host, during `State.Configure`, before `Strategy.Initialize(...)`:
 
 ```csharp
-readonly StrategyFootprintIndicator footprint;
-
-public MySignal(MZpack.NT8.Algo.Strategy strategy, StrategyFootprintIndicator footprint)
-    : base(strategy, MarketDataSource.Level1, SignalCalculate.OnBarClose, true)
+var footprint = GetIndicator(FOOTPRINT) as StrategyFootprintIndicator;
+if (footprint != null)
 {
-    this.footprint = footprint;
-}
-
-// bar.Absorptions is empty unless the indicator was asked to calculate absorptions
-public override void DeclareRequirements()
-{
-    Require(footprint, FootprintCapabilities.Absorptions);
+    footprint.ShowAbsorption = true;       // required before reading bar.Absorptions
+    // footprint.ShowImbalanceSRZones = true; // required before reading imbalance S/R zones
 }
 ```
 
 Rules:
-- declare what you **read**, not the setting you want — the mapping is the framework's business;
-- a requirement belongs to an **instance**, not to a type: a strategy may own more than one footprint;
-- the strategy unions all declarations and turns the settings **on, never off**, so a setting the user enabled
-  in the indicator template is never taken away;
+- enable the setting for what the signal **reads**, not an unrelated display preference;
+- configure the exact `StrategyFootprintIndicator` instance used by the strategy;
 - data that is always calculated (`bar.Delta`, `bar.Volume`, the per-level rows, `bar.POC`,
-  `bar.MinDelta`/`MaxDelta`, `session.POCs`) needs no declaration — most signals override nothing.
-
-Overloads exist per indicator family: `IFootprintIndicator`, `IVolumeProfileIndicator`, `IBigTradeIndicator`,
-`IMarketDepthIndicator`, `IVolumeDeltaIndicator`. The compiler will not let you pass footprint capabilities
-with a volume profile.
+  `bar.MinDelta`/`MaxDelta`, `session.POCs`) needs no extra configuration.
 
 ## 3. Assembling the strategy: Entry[] + Pattern + signals tree + Initialize
 This is the core. SL/TP/trailing are DECLARATIVE via the `Entry` object, not via override methods.

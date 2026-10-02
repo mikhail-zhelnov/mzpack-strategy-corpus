@@ -89,33 +89,20 @@ Helpers: `ResolveDirection(dir, allowed)`, `IsDetermined(dir)`,
 `bool IsMarketEventSupported(MarketDataSource)`.
 Constructor: `Signal(Strategy strategy, MarketDataSource source, SignalCalculate calculate, bool isReset)`.
 
-Declaring what the indicator must calculate:
-```csharp
-public virtual void DeclareRequirements();                                   // override, call Require(...)
-protected void Require(IFootprintIndicator indicator, FootprintCapabilities caps);
-protected void Require(IVolumeProfileIndicator indicator, VolumeProfileCapabilities caps);
-protected void Require(IBigTradeIndicator indicator, BigTradeCapabilities caps);
-protected void Require(IMarketDepthIndicator indicator, MarketDepthCapabilities caps);
-protected void Require(IVolumeDeltaIndicator indicator, VolumeDeltaCapabilities caps);
-```
+Configuring what the indicator must calculate in API 2.4.17:
 Some indicator data is calculated only when the matching setting is on — footprint absorptions, imbalance S/R
-zones, bar value area, session value area, delta rate and so on. A signal that reads such data MUST declare it,
-otherwise it reads nothing and looks like a signal that never fires. Declare what you READ, not the setting you
-want; the strategy unions the declarations of all its signals and turns the settings ON, never off. Requirements
-belong to an INSTANCE, not to a type — a strategy may own more than one footprint. Data that is always
+zones, bar value area, session value area, delta rate and so on. A signal that reads such data must configure
+the matching `StrategyFootprintIndicator` instance in the host, otherwise it reads nothing and looks like a
+signal that never fires. Data that is always
 calculated (`bar.Delta`, `bar.Volume`, the per-level rows, `bar.POC`, `bar.MinDelta`/`MaxDelta`, `session.POCs`)
-needs no declaration.
+needs no extra configuration.
 ```csharp
-readonly StrategyFootprintIndicator footprint;
-
-public MySignal(Strategy strategy, StrategyFootprintIndicator footprint)
-    : base(strategy, MarketDataSource.Level1, SignalCalculate.OnBarClose, true) { this.footprint = footprint; }
-
-public override void DeclareRequirements() => Require(footprint, FootprintCapabilities.Absorptions);
+var footprint = GetIndicator(FOOTPRINT) as StrategyFootprintIndicator;
+if (footprint != null)
+    footprint.ShowAbsorption = true;
 ```
-> Hold the indicator in a field injected through the constructor. Reaching for it through the host strategy
-> (`((MyStrategy)Strategy.MZpackStrategy).SomeIndicator`) makes the signal unmovable and leaves its
-> requirements unattributable to an instance.
+> `DeclareRequirements()` and `Require(...)` are not available in API 2.4.17. Do not generate them for this
+> skill release.
 
 ## Signal probe — observing signals outside the pattern tree
 An optional second evaluation path, for observation and statistics only; it never takes part in trading.

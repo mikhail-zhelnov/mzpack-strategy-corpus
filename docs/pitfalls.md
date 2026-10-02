@@ -19,31 +19,25 @@ on — footprint absorptions, imbalance S/R zones, bar value area, session value
 and others. If the indicator was never asked to calculate it, the collection is empty on every
 single bar.
 
-**Fix.** Declare what you read:
+**Fix.** In API 2.4.17 configure the indicator in the host, in `State.Configure`, before
+`Strategy.Initialize(...)`:
 
 ```csharp
-readonly StrategyFootprintIndicator footprint;
-
-public MySignal(MZpack.NT8.Algo.Strategy strategy, StrategyFootprintIndicator footprint)
-    : base(strategy, MarketDataSource.Level1, SignalCalculate.OnBarClose, true)
+var footprint = GetIndicator(FOOTPRINT) as StrategyFootprintIndicator;
+if (footprint != null)
 {
-    this.footprint = footprint;
-}
-
-public override void DeclareRequirements()
-{
-    Require(footprint, FootprintCapabilities.Absorptions);
+    footprint.ShowAbsorption = true;          // before reading bar.Absorptions
+    // footprint.ShowImbalanceSRZones = true; // before reading imbalance S/R zones
 }
 ```
 
-Declare what you **read**, not the setting you want — the mapping is the framework's job. A
-requirement belongs to an **instance**, not a type: a strategy may own more than one footprint.
+Enable the setting for what you **read**, on the indicator instance owned by this strategy.
 
-Data that is always calculated needs no declaration: `bar.Delta`, `bar.Volume`, the per-level
+Data that is always calculated needs no extra configuration: `bar.Delta`, `bar.Volume`, the per-level
 rows, `bar.POC`, `bar.MinDelta` / `MaxDelta`, `session.POCs`.
 
-> This one has bitten the product itself twice. If a signal has never fired, check this first,
-> before you question your logic.
+> `DeclareRequirements()` / `Require(...)` belong to a later API and must not be generated for this
+> 2.4.17-compatible skill. If a signal has never fired, check the host's indicator configuration first.
 
 ---
 

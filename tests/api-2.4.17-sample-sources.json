@@ -1,0 +1,18 @@
+{
+  "samples/approaching-level/ApproachingToSessionLevelSignal.cs": "MZpack.NT8/Algo/Strategies/GhostResistance/ApproachingToSessionLevelSignal.cs",
+  "samples/big-trade/BigTradeSignal.cs": "MZpack.NT8/Algo/Strategies/GhostResistance/BigTradeSignal.cs",
+  "samples/custom-plots/CustomPlots.cs": "MZpack.NT8/Algo/Samples/Built-in/CustomPlots.cs",
+  "samples/delta-divergence/DeltaDivergenceSignal.cs": "MZpack.NT8/Algo/Strategies/FootprintAction/DeltaDivergenceSignal.cs",
+  "samples/export/DrawingObjects_Export.cs": "MZpack.NT8/Algo/Strategies/DrawingObjects_Export/DrawingObjects_Export.cs",
+  "samples/extensions/BarCloseTarget.cs": "MZpack.NT8/Algo/Extensions/Exits/BarCloseTarget.cs",
+  "samples/extensions/BarHiLoTrail.cs": "MZpack.NT8/Algo/Extensions/Trails/BarHiLoTrail.cs",
+  "samples/extensions/BarStopLossEntry.cs": "MZpack.NT8/Algo/Extensions/Entries/BarStopLossEntry.cs",
+  "samples/extensions/FiboRetracementEntry.cs": "MZpack.NT8/Algo/Extensions/Entries/FiboRetracementEntry.cs",
+  "samples/extensions/SignalStopLossEntry.cs": "MZpack.NT8/Algo/Extensions/Entries/SignalStopLossEntry.cs",
+  "samples/hammer-absorption/HammerWithAbsorption.cs": "MZpack.NT8/Algo/Strategies/FootprintAction/HammerWithAbsorption.cs",
+  "samples/indicator-strategy/BiggestTradeIndicator.cs": "MZpack.NT8/Algo/Samples/Built-in/BiggestTradeIndicator.cs",
+  "samples/multi-dataseries/MultiDataSeriesAdvancedStrategy.cs": "MZpack.NT8/Algo/Samples/Built-in/MultiDataSeriesAdvancedStrategy.cs",
+  "samples/risk/RiskManagement.cs": "MZpack.NT8/Algo/Samples/Built-in/RiskManagement.cs",
+  "samples/stacked-imbalance/StackedImbalanceSignal.cs": "MZpack.NT8/Algo/Strategies/FootprintAction/StackedImbalanceSignal.cs",
+  "samples/trading-times/TradingTimes.cs": "MZpack.NT8/Algo/Samples/Built-in/TradingTimes.cs"
+}

@@ -1,11 +1,11 @@
-# MZpack Strategy Corpus
+# MZpack AI Skill — Strategy Corpus
 
 Everything an AI coding agent needs to write NinjaTrader 8 strategies and indicators on the
 MZpack API: the API surface, a written guide to the framework, 16 worked examples and three
 buildable templates.
 
-Point your agent at this folder and ask it for what you want. It will know the API instead of
-guessing at it.
+This repository is an installable Agent Skill. Point your agent at this folder and ask it for what you want.
+It will know the API instead of guessing at it.
 
 **Requires MZpack Strategies** (or Full Suite) — not the Indicators package alone. Everything here
 is built on `MZpackStrategyBase` and the `MZpack.NT8.Algo` engine, which ship in
@@ -13,7 +13,7 @@ is built on `MZpackStrategyBase` and the `MZpack.NT8.Algo` engine, which ship in
 compiles. If you own Indicators only, see
 [Product Selection](https://www.mzpack.pro/product-selection/).
 
-This corpus is written against **Strategies API 2.4.17**. Strategies has its own version line,
+Skill **1.0.0** is written against **Strategies API 2.4.17**. Strategies has its own version line,
 separate from the Indicators one — so a 4.x Indicators installation tells you nothing about
 whether you have the strategy engine.
 
@@ -25,8 +25,8 @@ enough — see below).
 ## Quick start
 
 ```
-1. Clone or unzip this folder next to your strategy project.
-2. Point your agent at it (see below).
+1. Install or clone this skill into your agent's skill directory, or place it next to your strategy project.
+2. Point your agent at `SKILL.md` (see below).
 3. Copy templates/StrategyTemplate into your own folder, rename the project and namespace.
 4. Ask: "add a delta divergence signal to this strategy, following AGENTS.md"
 5. Build:  msbuild YourStrategy.csproj
@@ -64,6 +64,15 @@ If you would rather stay in an ordinary shell, `dotnet msbuild <project>.csproj`
 > Build the **template**, not the repository root. `samples/` is deliberately not part of any
 > project, and there is nothing to build at the top level.
 
+### Codex
+
+Codex discovers a project skill under `.codex/skills/`, or a personal skill under your Codex skills directory.
+For a project-local install, clone this repository as:
+
+```powershell
+git clone https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .codex\skills\mzpack-strategies
+```
+
 ### Claude Code
 
 Put the corpus inside your project folder, or add a `CLAUDE.md` at the project root:
@@ -75,10 +84,10 @@ Worked examples: ./mzpack-corpus/samples/
 Known pitfalls: ./mzpack-corpus/docs/pitfalls.md
 ```
 
-### Codex CLI
+### Existing Codex projects
 
-`AGENTS.md` is picked up automatically when the corpus sits in the working tree. If you keep it
-elsewhere, add the same four lines to your project's own `AGENTS.md`.
+`AGENTS.md` remains a compatibility entry point when the corpus sits in the working tree. If the
+skill is kept elsewhere, install it as above rather than copying its instructions into every project.
 
 ### Cursor / other agents
 
