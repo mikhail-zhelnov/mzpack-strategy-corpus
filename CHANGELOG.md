@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2 — 2026-10-02
+
+- Pin all installation commands to the matching immutable skill release tag.
+
 ## 1.0.1 — 2026-10-02
 
 - Documented project-local PowerShell installs for Claude Code and Cursor.
