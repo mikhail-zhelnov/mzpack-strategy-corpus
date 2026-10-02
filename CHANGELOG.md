@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1 — 2026-10-02
+
+- Documented project-local PowerShell installs for Claude Code and Cursor.
+
 ## 1.0.0 — 2026-10-02
 
 - First portable MZpack AI Skill bundle for MZpack Strategies API 2.4.17.

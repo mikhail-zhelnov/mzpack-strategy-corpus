@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "name": "mzpack-strategies",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "strategiesApiVersion": "2.4.17",
   "ninjaTrader": "8.0.27+",
   "framework": ".NET Framework 4.8",

@@ -13,7 +13,7 @@ is built on `MZpackStrategyBase` and the `MZpack.NT8.Algo` engine, which ship in
 compiles. If you own Indicators only, see
 [Product Selection](https://www.mzpack.pro/product-selection/).
 
-Skill **1.0.0** is written against **Strategies API 2.4.17**. Strategies has its own version line,
+Skill **1.0.1** is written against **Strategies API 2.4.17**. Strategies has its own version line,
 separate from the Indicators one — so a 4.x Indicators installation tells you nothing about
 whether you have the strategy engine.
 
@@ -75,7 +75,18 @@ git clone https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .codex\s
 
 ### Claude Code
 
-Put the corpus inside your project folder, or add a `CLAUDE.md` at the project root:
+Claude Code discovers a project skill under `.claude/skills/`. From the root of the strategy
+project, install it with:
+
+```powershell
+New-Item -ItemType Directory -Force .claude\skills | Out-Null
+git clone https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .claude\skills\mzpack-strategies
+```
+
+Then start Claude Code and ask for an MZpack strategy task, or invoke `/mzpack-strategies`.
+
+If the corpus already lives in the working tree, a `CLAUDE.md` at the project root can instead
+point Claude Code to it:
 
 ```markdown
 Read ./mzpack-corpus/AGENTS.md before writing any MZpack code.
@@ -89,9 +100,17 @@ Known pitfalls: ./mzpack-corpus/docs/pitfalls.md
 `AGENTS.md` remains a compatibility entry point when the corpus sits in the working tree. If the
 skill is kept elsewhere, install it as above rather than copying its instructions into every project.
 
-### Cursor / other agents
+### Cursor
 
-Add the corpus folder to the workspace and reference `AGENTS.md` in your rules file.
+Cursor discovers a project skill under `.cursor/skills/`. From the root of the strategy project,
+install it with:
+
+```powershell
+New-Item -ItemType Directory -Force .cursor\skills | Out-Null
+git clone https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .cursor\skills\mzpack-strategies
+```
+
+Open a new Agent chat and ask for an MZpack strategy task, or invoke `/mzpack-strategies`.
 
 ---
 
