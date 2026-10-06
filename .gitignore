@@ -9,6 +9,7 @@
 # VS / Rider
 .vs/
 .idea/
+__pycache__/
 
 # NuGet (legacy format)
 packages/

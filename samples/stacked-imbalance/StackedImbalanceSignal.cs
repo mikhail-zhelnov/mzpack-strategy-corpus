@@ -18,8 +18,19 @@ namespace NinjaTrader.NinjaScript.Strategies.MZpackStrategies.FootprintActionStr
     /// </summary>
     public class StackedImbalanceSignal : Signal
     {
-        public StackedImbalanceSignal(MZpack.NT8.Algo.Strategy strategy) : base(strategy, MarketDataSource.Level1, SignalCalculate.OnBarClose, true)
+        readonly StrategyFootprintIndicator footprint;
+
+        public StackedImbalanceSignal(MZpack.NT8.Algo.Strategy strategy, StrategyFootprintIndicator footprint) : base(strategy, MarketDataSource.Level1, SignalCalculate.OnBarClose, true)
         {
+            this.footprint = footprint;
+        }
+
+        // bar.ImbalanceSRZones is empty unless the indicator was asked to build imbalance S/R zones - the
+        // signal reads nothing else that is gated. Declaring it here is what lets the signal be measured while
+        // it is switched off for trading; the strategy used to tie the indicator setting to that same switch.
+        public override void DeclareRequirements()
+        {
+            Require(footprint, FootprintCapabilities.ImbalanceSRZones);
         }
 
         public override void OnCalculate(MarketDataEventArgs e, int barIdx, SignalDirection allowed)
@@ -28,9 +39,9 @@ namespace NinjaTrader.NinjaScript.Strategies.MZpackStrategies.FootprintActionStr
             SignalDirection direction = SignalDirection.None;
             IFootprintBar bar;
 
-            if (strategy.FootprintIndicator.FootprintBars.TryGetValue(barIdx, out bar))
+            if (footprint.FootprintBars.TryGetValue(barIdx, out bar))
             {
-                if (!strategy.CheckBarFilters(bar, strategy.Strategy_StackedImbalances_OverrideFilters, strategy.Strategy_StackedImbalances_MinBarVolume, strategy.Strategy_StackedImbalances_MinBarDelta, strategy.Strategy_StackedImbalances_MinBarDeltaPercent))
+                if (!strategy.CheckBarFilters(bar, strategy.Strategy_StackedImbalances_FilterMode, strategy.Strategy_StackedImbalances_Percentile,strategy.Strategy_StackedImbalances_MinBarVolume, strategy.Strategy_StackedImbalances_MinBarDelta, strategy.Strategy_StackedImbalances_MinBarDeltaPercent))
                     return;
 
                 if (bar.ImbalanceSRZones.Zones[(int)TradeSide.Bid].Count > 0 && bar.ImbalanceSRZones.Zones[(int)TradeSide.Ask].Count > 0)  // Undefined direction

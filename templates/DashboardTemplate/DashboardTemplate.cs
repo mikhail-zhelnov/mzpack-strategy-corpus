@@ -74,7 +74,7 @@ namespace DashboardTemplate
                 ShowPatternsDashboard     = true;                       // show the patterns dashboard
                 DashboardGridShowLegend   = true;                       // show the legend (signal names)
                 DashboardGridViewPosition = DashboardViewPosition.Top;  // grid position on the chart
-                DashboardGridViewOffset   = -30;                        // vertical offset
+                DashboardGridViewOffset   = -30;                        // 30 px from Top; rendering uses absolute distance
 
                 // The panel is used as a host for the dashboard toggles
                 ControlPanelShow           = true;

@@ -6,8 +6,9 @@ create an export object → set `DataSet.Schema` → `Register(export)` in `Stat
 
 ## Two kinds of export
 
-### 1. IndicatorExport — indicator values (canonical: `Algo\Strategies\Data_Export\Data_Export.cs`, 53 KB)
-The file is large — keep it as a reference, don't copy it. What it shows:
+### 1. IndicatorExport — indicator values (canonical: [Data_Export.cs](Data_Export.cs))
+This API 2.4.18 reference exports Footprint, VolumeProfile, BigTrade and MarketDepth.
+Select the relevant export/schema blocks when building your own strategy:
 ```csharp
 var export = new IndicatorExport(this, footprintIndicator,
     ExportDataSource.Level1, Footprint_ExportTemporality, ExportGranularity.Bar,
@@ -48,9 +49,61 @@ Register(export);
 Shows: `EnableBacktesting = true` for historical export, `GetBasePath(this)` for the schema path,
 generating a sample schema when the file is missing, and a set of UI parameters for the Export group.
 
+## Streaming CSV in API 2.4.18
+
+In the built-in `Data_Export` strategy, enable the indicator group's `Export` and
+`Export real-time` options. For Footprint, VolumeProfile and BigTrade also set
+`Temporality = Realtime`; their default is `Historical`, which collects during
+historical loading. The MarketDepth export is already `Realtime` with
+`ExportDataSource.Level2` and `ExportGranularity.Update`. Each group's streaming
+switch is independent and defaults to `false`.
+
+For a custom strategy, the same API configuration in `State.DataLoaded` is:
+
+```csharp
+var export = new IndicatorExport(this, footprintIndicator,
+    ExportDataSource.Level1, ExportTemporality.Realtime, ExportGranularity.Bar,
+    new ExportArgs
+    {
+        IsExportWhileCollecting = true,
+        FlushIntervalMs = 0,
+        IsHeader = true,
+        IsTime = true,
+        IsFile = true,
+        FileName = "footprint.csv",
+        Shift = -1  // export the closed footprint bar
+    });
+var schema = new DataSchema(export.DataSet);
+schema.Append(IndValue.Delta);
+schema.Append(IndValue.Volume);
+export.DataSet.Schema = schema;
+Register(export);
+```
+
+- `FlushIntervalMs = 0` flushes every row. The canonical MarketDepth export uses
+  `250` ms to reduce writes at DOM-update rates; rows become visible at a flush.
+- The streaming writer opens during its temporality's initialization and resolves
+  the path/header once. It truncates the selected file once, then appends rows.
+  Set `IsBatch = true` for a separate numbered file per run.
+- With streaming off, Historical exports are written at `State.Transition`,
+  Realtime exports at `State.Terminated`. Streaming Historical exports still write
+  during historical loading; the checkbox alone does not select live data.
+- The writer uses `FileShare.ReadWrite`. A live file-write failure is reported once
+  and sets `Export.IsStreamFailed`; rows continue collecting for a final dataset
+  write at the end of the export's temporality. A routing error stops only the
+  affected export, and the other registered exports continue.
+- `DrawingObjectsExport` uses the same streaming path, including path/header setup.
+
+For a custom BigTrade schema, `schema.Append(IndValue.DomPressurePassesFilter)`
+exports `1` or `0` from the indicator's current DOM-pressure filter gate.
+`DomPressureVolume` exports pressure volume (with `SignedVolume` applied); it is a different field. The canonical
+`Data_Export` sample exposes the volume field but does not add a UI switch for this
+new gate field. See [API 2.4.18 changes](../../docs/release-2.4.18.md).
+
 ## Key DataExport types
 `Export`, `IndicatorExport`, `DrawingObjectsExport`, `ExportArgs`, `DataSchema`, `DataSet`,
 `IndValue`, `ValueKind`, `ChartObjectDescriptor`, `MapItem`, `DrawingTool`,
-`ExportTemporality` (Historical/Realtime), `ExportGranularity` (Bar/Tick),
-`ExportDataSource` (Level1/Level2), `CalculateExportValueDelegate`.
+`ExportTemporality` (Historical/Realtime), `ExportGranularity` (Bar/Tick/Update),
+`ExportDataSource` (Level1/Level2/Custom), `CalculateExportValueDelegate`.
+Level2 exports require `Update`; Level1 exports cannot use `Update`.
 Wiring up is always: create → `DataSet.Schema = ...` → `Register(export)` in `State.DataLoaded`.
