@@ -10,4 +10,10 @@ What it demonstrates:
 - working with `bar.Absorptions[(int)TradeSide.Bid|Ask]` (`.Count`, `.First()/.Last().Key` — the zone price);
 - candle geometry: `UpperWick/LowerWick`, `GetLowerWickPercent()/GetUpperWickPercent()`, `IsBullish/IsBearish`;
 - an optional POC filter on the absorption's position;
-- a reference for the absorption pattern (there is no separate AbsorptionSignal in the product).
+- an injected footprint and `DeclareRequirements()` with `FootprintCapabilities.Absorptions`, so
+  calculation is enabled even for a probe-only signal;
+- `FootprintAction`-specific geometry settings and bar filters: adapt these when copying to a standalone host.
+
+API 2.4.18 also includes the distinct built-in `MZpack.NT8.Algo.Signals.FootprintAbsoprtionSignal`
+(public spelling). It detects per-level absorption rather than this hammer pattern; see
+`../../docs/release-2.4.18.md` for its constructor and host settings.

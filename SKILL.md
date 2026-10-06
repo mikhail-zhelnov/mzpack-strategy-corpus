@@ -1,19 +1,20 @@
 ---
 name: mzpack-strategies
-description: Create or modify NinjaTrader 8 strategies against MZpack Strategies API 2.4.17 using the bundled API guide, templates, examples, and failure-mode guidance. Use for MZpack strategy code, not for the Indicators-only product or a different Strategies API version.
+description: Create or modify NinjaTrader 8 strategies against MZpack Strategies API 2.4.18 using the bundled API guide, templates, examples, and failure-mode guidance. Use for MZpack strategy code, not for the Indicators-only product or a different Strategies API version.
 ---
 
-Create a buildable MZpack Strategies API 2.4.17 project that reflects the user's stated trading rules.
+Create a buildable MZpack Strategies API 2.4.18 project that reflects the user's stated trading rules.
 
 ## Compatibility boundary
 
-This skill targets only MZpack Strategies API 2.4.17. Before generating code, confirm the installed
-`MZpackStrategyBase.Version` is `2.4.17`. If it is absent or different, stop and tell the user to install the
+This skill targets only MZpack Strategies API 2.4.18. Before generating code, confirm the installed
+`MZpackStrategyBase.Version` is `2.4.18`. If it is absent or different, stop and tell the user to install the
 matching skill/API release; do not guess compatibility.
 
-Do not generate API members absent from 2.4.17, including `DeclareRequirements()` and `Require(...)`.
-For gated footprint data, configure the `StrategyFootprintIndicator` directly in the host as described in
-`docs/pitfalls.md` section 1.
+For indicator data that requires calculation settings, override `DeclareRequirements()` in the signal and
+use the typed `Require(indicator, capabilities)` overloads as described in `docs/pitfalls.md` section 1.
+`Strategy.Initialize(...)` activates those requirements for the trading tree and optional probe signals.
+Use only members confirmed in API 2.4.18 by `docs/api-surface.md` and the bundled source snapshots.
 
 ## Workflow
 

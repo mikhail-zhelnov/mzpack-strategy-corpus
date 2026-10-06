@@ -19,8 +19,19 @@ namespace NinjaTrader.NinjaScript.Strategies.MZpackStrategies.FootprintActionStr
     /// </summary>
     public class HammerWithAbsorption : Signal
     {
-        public HammerWithAbsorption(MZpack.NT8.Algo.Strategy strategy) : base(strategy, MarketDataSource.Level1, SignalCalculate.OnBarClose, true)
+        readonly StrategyFootprintIndicator footprint;
+
+        public HammerWithAbsorption(MZpack.NT8.Algo.Strategy strategy, StrategyFootprintIndicator footprint) : base(strategy, MarketDataSource.Level1, SignalCalculate.OnBarClose, true)
         {
+            this.footprint = footprint;
+        }
+
+        // bar.Absorptions is empty unless the indicator was asked to calculate absorptions: AbsorptionParams is
+        // filled only under ShowAbsorption, and the calculation is gated on that list being non-empty. Nothing
+        // used to set it, so this signal could not fire even when it was enabled for trading.
+        public override void DeclareRequirements()
+        {
+            Require(footprint, FootprintCapabilities.Absorptions);
         }
 
         public override void OnCalculate(MarketDataEventArgs e, int barIdx, SignalDirection allowed)
@@ -28,10 +39,10 @@ namespace NinjaTrader.NinjaScript.Strategies.MZpackStrategies.FootprintActionStr
             FootprintAction strategy = (FootprintAction)Strategy.MZpackStrategy;
             SignalDirection direction = SignalDirection.None;
 
-            if (!strategy.FootprintIndicator.FootprintBars.TryGetValue(barIdx, out IFootprintBar bar))
+            if (!footprint.FootprintBars.TryGetValue(barIdx, out IFootprintBar bar))
                 return;
 
-            if (!strategy.CheckBarFilters(bar, strategy.Strategy_HammerWithAbsorption_OverrideFilters, strategy.Strategy_HammerWithAbsorption_MinBarVolume, strategy.Strategy_HammerWithAbsorption_MinBarDelta, strategy.Strategy_HammerWithAbsorption_MinBarDeltaPercent))
+            if (!strategy.CheckBarFilters(bar, strategy.Strategy_HammerWithAbsorption_FilterMode, strategy.Strategy_HammerWithAbsorption_Percentile,strategy.Strategy_HammerWithAbsorption_MinBarVolume, strategy.Strategy_HammerWithAbsorption_MinBarDelta, strategy.Strategy_HammerWithAbsorption_MinBarDeltaPercent))
                 return;
 
             ICandle candle = strategy.GetCandle(GetCurrentBarAgo(0));

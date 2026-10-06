@@ -4,6 +4,8 @@ Verbatim snapshots from the MZpack product sources and the official API samples.
 real, readable example of a single technique, with a README next to it explaining what it
 demonstrates, which API members it uses, and at which moment it calculates.
 
+These 17 C# snapshots match the API 2.4.18 release commit recorded in `../skill-manifest.json`.
+Run `tests/verify_skill.py --product-root <mzpack-repo>` from the corpus root to check source parity.
 Which one to open for which pattern: `../docs/catalog.md`.
 
 ## Entry signals
@@ -31,13 +33,16 @@ Which one to open for which pattern: `../docs/catalog.md`.
 | scheduled trading windows | `trading-times/` | TradingTimes |
 | indicator built on a strategy | `indicator-strategy/` | BiggestTradeIndicator |
 | custom plots (`StrategyPlotIndicator`) | `custom-plots/` | CustomPlots |
-| exporting data and chart objects to CSV | `export/` | DrawingObjects_Export |
+| exporting data and chart objects to CSV | `export/` | DrawingObjects_Export, Data_Export |
 
 ## These files do not compile as they stand
 
 The snapshots still carry `#if STRAT`, `#if DATA` and `#if APISAMPLE` directives from the
 sources they came from. Remove the directive and its `#endif` when you copy a sample into your
-own project.
+own project. Removing guards alone does not make a product-host signal standalone: replace its
+`FootprintAction` / `GhostResistance` casts, UI properties and shared filters with your own contract.
+Pass the footprint to the updated FootprintAction signal constructors; use `DeclareRequirements()` for
+gated calculations. Their code is an adaptation reference, not a self-contained add-on.
 
 They are left unedited deliberately: an edited snapshot drifts from the original and quietly
 becomes wrong, an unedited one does not. `samples/` is not part of any `.csproj`, so nothing here

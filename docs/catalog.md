@@ -27,7 +27,10 @@ Start from the pattern you want to build, not from the file list.
 | Trading on a second data series | `samples/multi-dataseries/` | Secondary series wiring. |
 | An indicator built on a strategy | `samples/indicator-strategy/` | Rendering from a strategy — marking the biggest trade on the chart. |
 | Custom plots | `samples/custom-plots/` | `StrategyPlotIndicator`, own panel over the chart. |
-| Exporting to CSV | `samples/export/` | `DrawingObjectsExport`, schemas, `ChartObjectDescriptor`. |
+| Exporting to CSV | `samples/export/` | `DrawingObjects_Export` for chart schemas; `Data_Export` for indicator values and realtime streaming. |
+| Measuring signals independently | `docs/signal-probe.md` | Probe factories, recording gates, tick-level outcomes and reports. |
+| Calibrating volume/delta filters | `docs/filter-calibration.md` | Completed-session baselines, intraday buckets, thresholds and ranks. |
+| Released built-in signals and DOM pressure | `docs/release-2.4.18.md` | Public constructors, calculation gates, live/Market Replay limitations and dashboard controls. |
 
 ## Templates
 
@@ -50,3 +53,8 @@ Start from the pattern you want to build, not from the file list.
 `FootprintAction` and `GhostResistance` ship compiled with MZpack Strategies. The signals from
 both are in `samples/` — those are the parts worth reading. For the shape of a large multi-signal
 host, `templates/DashboardTemplate` shows the same structure in a size you can hold in your head.
+
+The three `FootprintAction` signal snapshots now receive a `StrategyFootprintIndicator` through the
+constructor. Their shared `CheckBarFilters` calls and strategy properties belong to that product host;
+when adapting them, replace those host dependencies with your own filter contract. The similarly named
+classes in `MZpack.NT8.Algo.Signals` are a separate public API — see `docs/release-2.4.18.md`.

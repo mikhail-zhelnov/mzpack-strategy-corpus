@@ -1,7 +1,7 @@
 # MZpack AI Skill — Strategy Corpus
 
 Everything an AI coding agent needs to write NinjaTrader 8 strategies and indicators on the
-MZpack API: the API surface, a written guide to the framework, 16 worked examples and three
+MZpack API: the API surface, a written guide to the framework, 17 worked examples and three
 buildable templates.
 
 This repository is an installable Agent Skill. Point your agent at this folder and ask it for what you want.
@@ -13,12 +13,16 @@ is built on `MZpackStrategyBase` and the `MZpack.NT8.Algo` engine, which ship in
 compiles. If you own Indicators only, see
 [Product Selection](https://www.mzpack.pro/product-selection/).
 
-Skill **1.0.3** is written against **Strategies API 2.4.17**. Strategies has its own version line,
+Skill **1.1.0** is written against **Strategies API 2.4.18**. Strategies has its own version line,
 separate from the Indicators one — so a 4.x Indicators installation tells you nothing about
 whether you have the strategy engine.
 
 Also required: NinjaTrader 8, .NET Framework 4.8, and MSBuild (Visual Studio Build Tools are
-enough — see below).
+enough — see below). The language version is C# 7.3.
+
+This working tree prepares the `skill-v1.1.0` release. That tag is the publication target, not a
+claim that the release is already available. Until publication, install from this local corpus;
+the pinned clone commands below become available when the tag is published.
 
 ---
 
@@ -29,7 +33,7 @@ enough — see below).
 2. Point your agent at `SKILL.md` (see below).
 3. Copy templates/StrategyTemplate into your own folder, rename the project and namespace.
 4. Ask: "add a delta divergence signal to this strategy, following AGENTS.md"
-5. Build:  msbuild YourStrategy.csproj
+5. Build:  msbuild YourStrategy.csproj /p:DeployToNinjaTrader=false
 ```
 
 ### Download the latest release ZIP
@@ -38,7 +42,8 @@ Download [the latest MZpack AI Skill ZIP](https://github.com/mikhail-zhelnov/mzp
 then extract it into your agent's skill directory so that `SKILL.md` is at
 `.codex\skills\mzpack-strategies\SKILL.md`, `.claude\skills\mzpack-strategies\SKILL.md`, or
 `.cursor\skills\mzpack-strategies\SKILL.md`. This URL always supplies the latest published skill;
-the versioned tags remain available when you need a specific, reproducible version.
+the versioned tags remain available when you need a specific, reproducible version. Until
+`skill-v1.1.0` is published, this URL may still supply a previous skill/API version; check its manifest.
 
 ## Building, if you have never built a NinjaScript add-on
 
@@ -54,7 +59,7 @@ MSBuild is on `PATH` there — it is *not* on `PATH` in an ordinary PowerShell w
 single most common first stumble:
 
 ```
-msbuild templates\StrategyTemplate\StrategyTemplate.csproj
+msbuild templates\StrategyTemplate\StrategyTemplate.csproj /p:DeployToNinjaTrader=false
 ```
 
 **Command line only, no IDE?** Install **Build Tools for Visual Studio** with the
@@ -64,10 +69,10 @@ PowerShell as above.
 If you would rather stay in an ordinary shell, `dotnet msbuild <project>.csproj` usually works.
 `docs/pitfalls.md` §11 has the recipe for locating MSBuild directly, for scripts and CI.
 
-> **Close NinjaTrader before you build.** While it is running it holds the assemblies in
-> `bin\Custom`, so the build cannot put yours there — and it still reports success. You get a clean
-> build and no strategy in the list. Build with NT8 closed, then start it: the DLL is copied for
-> you, there is nothing to move by hand.
+> The commands above compile without deployment. When deployment is requested, close NinjaTrader
+> first: it can hold the destination DLL open and the copy target then fails even after a successful
+> compile. With NinjaTrader closed, build with `/p:DeployToNinjaTrader=true` to copy the DLL to
+> `bin\Custom`. Ask before closing a running trading platform.
 
 > Build the **template**, not the repository root. `samples/` is deliberately not part of any
 > project, and there is nothing to build at the top level.
@@ -79,7 +84,7 @@ For a project-local install, clone this repository as:
 
 ```powershell
 New-Item -ItemType Directory -Force .codex\skills | Out-Null
-git clone --branch skill-v1.0.3 --depth 1 https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .codex\skills\mzpack-strategies
+git clone --branch skill-v1.1.0 --depth 1 https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .codex\skills\mzpack-strategies
 ```
 
 ### Claude Code
@@ -89,7 +94,7 @@ project, install it with:
 
 ```powershell
 New-Item -ItemType Directory -Force .claude\skills | Out-Null
-git clone --branch skill-v1.0.3 --depth 1 https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .claude\skills\mzpack-strategies
+git clone --branch skill-v1.1.0 --depth 1 https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .claude\skills\mzpack-strategies
 ```
 
 Then start Claude Code and ask for an MZpack strategy task, or invoke `/mzpack-strategies`.
@@ -116,7 +121,7 @@ install it with:
 
 ```powershell
 New-Item -ItemType Directory -Force .cursor\skills | Out-Null
-git clone --branch skill-v1.0.3 --depth 1 https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .cursor\skills\mzpack-strategies
+git clone --branch skill-v1.1.0 --depth 1 https://github.com/mikhail-zhelnov/mzpack-strategy-corpus.git .cursor\skills\mzpack-strategies
 ```
 
 Open a new Agent chat and ask for an MZpack strategy task, or invoke `/mzpack-strategies`.
@@ -129,9 +134,12 @@ Open a new Agent chat and ask for an MZpack strategy task, or invoke `/mzpack-st
 |---|---|
 | `AGENTS.md` | **Start here.** How an MZpack strategy is put together: host, algo class, signals, the signals tree, entries, risk, the signal probe, build and deploy. |
 | `docs/api-surface.md` | Types, members and enums of `MZpack.NT8.Algo` in one place. |
+| `docs/release-2.4.18.md` | Built-in signals, streaming CSV, DOM-pressure filters, dashboard and DOM aggregation. |
+| `docs/signal-probe.md` | Independent signal observations, outcomes, ranks and report limits. |
+| `docs/filter-calibration.md` | Session baselines, readiness, thresholds and percentile ranks. |
 | `docs/pitfalls.md` | Things that compile and then do nothing, and why. Read this before you debug. |
 | `docs/catalog.md` | Which sample to open for which pattern. |
-| `samples/` | 16 worked examples, one technique each, with a README explaining what it shows. |
+| `samples/` | 17 worked examples, with a README explaining the techniques in each group. |
 | `templates/` | Three buildable scaffolds: plain strategy, Pattern Dashboard, Control Panel. |
 | `Directory.Build.props` | Central paths to NinjaTrader and MZpack. Edit once, or set the environment variables. |
 
@@ -200,7 +208,7 @@ an unedited one does not.
 
 ## Version
 
-The corpus is written against **Strategies API 2.4.17** — `MZpackStrategyBase.Version` in the
+The corpus is written against **Strategies API 2.4.18** — `MZpackStrategyBase.Version` in the
 installed assembly. Check yours against that number before you blame your agent for the code it
 produced.
 
@@ -209,6 +217,22 @@ Strategies. The strategy engine is a separate product, and nothing here will bui
 
 If it is present but older, some of what the corpus describes will not exist yet and the code will
 not compile. Update Strategies first.
+
+The source snapshots are pinned by `productSourceRef` in `skill-manifest.json` to released product
+commit `185d67621238dd0ea1f08c1a358f7c84da0600d4`. No `API-2.4.18` Git tag is assumed.
+The manifest's `corpusReleaseTag` is the planned skill publication tag; `corpusReleaseTagStatus`
+records that it is still `planned`.
+
+For a repository checkout, validate the bundle, then optionally compare every snapshot with the pinned
+product source. The `tests/` maintenance tools are excluded from the portable skill ZIP.
+
+```powershell
+python tests\verify_skill.py
+python tests\verify_skill.py --product-root ..
+```
+
+The second command expects the MZpack product repository one directory above this corpus. Both
+checks use the manifest; `--product-ref` explicitly overrides the source ref for diagnostics.
 
 ---
 

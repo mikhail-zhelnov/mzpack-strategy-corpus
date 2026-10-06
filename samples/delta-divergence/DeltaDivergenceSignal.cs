@@ -17,8 +17,11 @@ namespace NinjaTrader.NinjaScript.Strategies.MZpackStrategies.FootprintActionStr
     /// </summary>
     public class DeltaDivergenceSignal : Signal
     {
-        public DeltaDivergenceSignal(MZpack.NT8.Algo.Strategy strategy) : base(strategy, MarketDataSource.Level1, SignalCalculate.OnBarClose, true)
+        readonly StrategyFootprintIndicator footprint;
+
+        public DeltaDivergenceSignal(MZpack.NT8.Algo.Strategy strategy, StrategyFootprintIndicator footprint) : base(strategy, MarketDataSource.Level1, SignalCalculate.OnBarClose, true)
         {
+            this.footprint = footprint;
         }
 
         public override void OnCalculate(MarketDataEventArgs e, int barIdx, SignalDirection allowed)
@@ -36,10 +39,10 @@ namespace NinjaTrader.NinjaScript.Strategies.MZpackStrategies.FootprintActionStr
             if (candle_1 == null || candle == null)
                 return;
 
-            if (!strategy.FootprintIndicator.FootprintBars.TryGetValue(barIdx, out bar))
+            if (!footprint.FootprintBars.TryGetValue(barIdx, out bar))
                 return;
 
-            if (!strategy.CheckBarFilters(bar, strategy.Strategy_DeltaDivergence_OverrideFilters, strategy.Strategy_DeltaDivergence_MinBarVolume, strategy.Strategy_DeltaDivergence_MinBarDelta, strategy.Strategy_DeltaDivergence_MinBarDeltaPercent))
+            if (!strategy.CheckBarFilters(bar, strategy.Strategy_DeltaDivergence_FilterMode, strategy.Strategy_DeltaDivergence_Percentile,strategy.Strategy_DeltaDivergence_MinBarVolume, strategy.Strategy_DeltaDivergence_MinBarDelta, strategy.Strategy_DeltaDivergence_MinBarDeltaPercent))
                 return;
 
             // LONG

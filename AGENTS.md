@@ -1,9 +1,10 @@
 # AGENTS.md — how to write a trading strategy on the MZpack API (NinjaTrader 8)
 
 A guide for the AI agent (and developer). Read it in full before generating code.
-This release targets **MZpack Strategies API 2.4.17** only. Do not use members introduced by a later API
-version. The mechanics below are confirmed against the `API-2.4.17` product source and against real production
-strategies (`FootprintAction`, `GhostResistance`).
+This release targets **MZpack Strategies API 2.4.18** only. Do not use members introduced by a later API
+version. The mechanics below are confirmed against product release commit
+`185d67621238dd0ea1f08c1a358f7c84da0600d4` (2026-10-06) and real production strategies
+(`FootprintAction`, `GhostResistance`). The product has no `API-2.4.18` tag yet; the commit is the immutable source.
 Reference examples are in `samples/`; the skeleton is in `templates/StrategyTemplate/`.
 
 ## 0. Context
@@ -40,7 +41,8 @@ The NinjaScript strategy visible in NinjaTrader. Configuration and UI only — N
 - `OnStateChange()` — call `base.OnStateChange()`; in `State.Configure` assemble the `Entry[]`
   and call `Strategy.Initialize(...)` (see §3). Configure the indicators here as well,
   after `GetIndicator(NAME) as <Type>`.
-- `OnBeforeSignalProbePass(SignalProbe)` — optional, only when a signal probe is used (see §3.1).
+- `OnConfigureSignalProbe(SignalProbe)` / `OnBeforeSignalProbePass(SignalProbe)` — optional probe hooks
+  (see §3.1). In a standalone assembly, use `protected override` for these inherited hooks.
 
 The engine calls the `OnCreateIndicators` and `OnCreateAlgoStrategy` delegates in `State.Configure`.
 
@@ -57,7 +59,7 @@ Recognition of the entry pattern — the core of your logic. One signal = one co
 ```csharp
 public class MySignal : Signal
 {
-    // Data source, calculation moment, hasPrice. The only form of the constructor.
+    // Data source, calculation moment, isReset. HasPrice is a separate property.
     public MySignal(MZpack.NT8.Algo.Strategy strategy)
         : base(strategy, MarketDataSource.Level1, SignalCalculate.OnBarClose, true) { }
 
@@ -91,13 +93,14 @@ public class MySignal : Signal
 ```
 Rules: start with `None`; an early `return` on every unmet condition; finish via
 `IsDetermined(direction)` filling in `Direction/Time/EntryPrice/ChartRange` (+`Description`).
-The engine resets the signal between calculations on its own (the `isReset` flag in the constructor).
+With `isReset=true`, the engine resets the signal's previous result before each calculation.
 
 ### Signal constructor parameters
-`base(strategy, MarketDataSource source, SignalCalculate calculate, bool hasPrice)`:
+`base(strategy, MarketDataSource source, SignalCalculate calculate, bool isReset)`:
 - `source` — almost always `Level1` (there are also `Level2`, `Custom`).
 - `calculate` — `OnBarClose` or `OnEachTick`.
-- `hasPrice` — whether the signal price participates in the decision tree.
+- `isReset` — clear the previous result before the next calculation.
+- `HasPrice` — a separate property controlling whether the signal price participates in the decision tree.
 
 ### Hold your indicator, and configure what it must calculate
 Take the indicator through the constructor and keep it in a field. Reaching for it through the host
@@ -108,23 +111,37 @@ imbalance S/R zones, bar value area, session value area, delta rate and others. 
 without enabling its calculation reads nothing on every bar and is indistinguishable from a signal that never
 fires.
 
-MZpack Strategies API 2.4.17 has no `DeclareRequirements()` / `Require(...)` capability API. Configure the
-indicator directly in the host, during `State.Configure`, before `Strategy.Initialize(...)`:
+In API 2.4.18, a custom signal declares gated data through `DeclareRequirements()`:
 
 ```csharp
-var footprint = GetIndicator(FOOTPRINT) as StrategyFootprintIndicator;
-if (footprint != null)
+readonly StrategyFootprintIndicator footprint;
+
+public MyAbsorptionSignal(MZpack.NT8.Algo.Strategy strategy, StrategyFootprintIndicator footprint)
+    : base(strategy, MarketDataSource.Level1, SignalCalculate.OnBarClose, true)
 {
-    footprint.ShowAbsorption = true;       // required before reading bar.Absorptions
-    // footprint.ShowImbalanceSRZones = true; // required before reading imbalance S/R zones
+    this.footprint = footprint;
+}
+
+public override void DeclareRequirements()
+{
+    Require(footprint, FootprintCapabilities.Absorptions);
+    // OR flags for the same instance when several kinds of gated data are read.
 }
 ```
 
+The framework resolves indicator references, calls the declaration and merges requirements from entry/exit
+signals, filters and probe-only signals. `Strategy.Initialize(...)` enables the required calculations before
+historical processing starts; no extra call after it is needed.
+
 Rules:
-- enable the setting for what the signal **reads**, not an unrelated display preference;
-- configure the exact `StrategyFootprintIndicator` instance used by the strategy;
+- declare what the signal **reads**, per indicator instance;
+- `AbsorptionSRZones` also enables `Absorptions`; `ImbalanceSRZones` does not require `Imbalances`;
+- requirements only enable settings or raise a minimum; they do not set detection thresholds or choose
+  the iceberg algorithm for you;
 - data that is always calculated (`bar.Delta`, `bar.Volume`, the per-level rows, `bar.POC`,
-  `bar.MinDelta`/`MaxDelta`, `session.POCs`) needs no extra configuration.
+  `bar.MinDelta`/`MaxDelta`, `session.POCs`) needs no declaration;
+- built-in signals without a declaration still need the appropriate indicator settings configured in the host.
+  See `docs/release-2.4.18.md` for the built-in signal contract and `docs/api-surface.md` for all capability enums.
 
 ## 3. Assembling the strategy: Entry[] + Pattern + signals tree + Initialize
 This is the core. SL/TP/trailing are DECLARATIVE via the `Entry` object, not via override methods.
@@ -219,12 +236,26 @@ Strategy.Initialize(CreateEntryPattern(), null, entries, 0, probeEnabled ? new F
   trades is worked out from the pattern and recorded as `ProbeEvent.IsInTree` — that is exactly what makes an
   observed-only signal measurable.
 - **Set `Name` in the factory** — it is what shows up in the report.
-- Results: `Strategy.SignalProbes` (one probe per pattern), each with `Events` and a `Diagnostics` summary
-  worth printing in `State.Terminated`.
-- A signal that never fired is flagged in `Diagnostics`: the usual cause is a missing capability declaration,
-  not a quiet market.
-- If the probe would touch shared state before the trading path does, override
-  `protected internal virtual void OnBeforeSignalProbePass(SignalProbe)` on the host and settle it there.
+- Results: `Strategy.SignalProbes` (one probe per pattern), each with index-aligned `Events` and `Outcomes`,
+  a `Diagnostics` summary and `BuildReport(stopLossTicks, profitTargetTicks, headerInfo)`. Close pending outcomes
+  with `CloseOpenOutcomes()` before reporting in `State.Terminated`.
+- A signal that never fired is flagged in `Diagnostics`. Check requirements and conditions; the diagnostic
+  alone does not establish why no event was observed.
+- Set `HorizonBars` / `LadderTicks` in the host's `OnConfigureSignalProbe(SignalProbe)` hook. The framework
+  invokes it whenever `Initialize` builds a fresh probe.
+- If the probe would touch shared state before the trading path does, settle it in `OnBeforeSignalProbePass`.
+  The base hooks are `protected internal virtual`; a standalone assembly overrides them as `protected override`.
+- The automatic probe path feeds Level1 only in this release. It runs even while a position is open and
+  outside the entry validation filter. Use `CanRecord` when observation must wait for calibration; it gates
+  recording, not evaluation.
+- Outcomes collect tick-level first touches, MFE/MAE, the first observed tick price and horizon/session/end
+  censoring. They are observations of signals, not executions. See `docs/signal-probe.md` for wiring and limits.
+
+### 3.2. Automatic bar filters (optional)
+`FilterCalibration` builds volume and absolute-delta baselines from completed prior sessions and optional
+intraday buckets. Pass the current session key to `Build`; use `IsReady` before using thresholds or ranks.
+Missing ranks are `NaN`, not zero. Custom hosts supply the bars and trading windows; the framework does not
+create a calibration for every strategy. See `docs/filter-calibration.md` for the public contract.
 
 ## 4. Indicators (CreateIndicators) and bar data
 Create them by name-constant and add them to the list; do the detailed configuration later in
@@ -274,13 +305,18 @@ set `DataSet.Schema` → `Register(export)`.
 - Chart objects: `new DrawingObjectsExport(this, new ExportArgs {...})`; schema —
   `schema.Append(name, ValueKind.Feature, new ChartObjectDescriptor { Script=..., Map=[...] })`
   or `DataSchema.LoadFromXml(this, path)`. For a historical export: `EnableBacktesting = true`.
-References and the full list of types — `samples/export/`.
+- For CSV rows while the strategy runs, use `ExportTemporality.Realtime` with
+  `ExportArgs.IsExportWhileCollecting = true`; `FlushIntervalMs = 0` flushes each row, a positive value
+  reduces write overhead at the cost of visibility latency. `IsBatch` keeps separate files for runs.
+References and the full list of types — `samples/export/` and `docs/release-2.4.18.md`.
 
 ## 6. Build and deploy
 - Build: `msbuild <Name>.csproj`; if `msbuild` is not on PATH (no Developer console) — fall back to
   `dotnet msbuild <Name>.csproj`. Paths/references come from `Directory.Build.props`.
-- **NinjaTrader must be CLOSED during the build.** While it runs it holds the assemblies in
-  `bin\Custom`; the copy fails and the build still reports success.
+- First build with `-p:DeployToNinjaTrader=false`; NinjaTrader may remain open for this compile-only check.
+- Close NinjaTrader before a build that deploys to `bin\Custom`. A locked destination makes the MSBuild
+  `Copy` target fail; a successful compile alone does not mean that the deployed DLL was replaced.
+  Do not close the platform without the user's permission.
 - After Build, the `DeployToNinjaTrader` target copies the DLL to `…\NinjaTrader 8\bin\Custom`.
   Disable it with: `-p:DeployToNinjaTrader=false` (CI, or building on a machine without NT8).
 - Do not launch NinjaTrader.exe from the build.

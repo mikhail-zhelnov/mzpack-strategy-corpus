@@ -1,7 +1,9 @@
 # MZpack.NT8.Algo — API surface (from source + real usage)
 
 Assembled from the source code of `MZpack.NT8\Algo` (Signal.cs, Strategy.cs, MZpackStrategyBase.cs,
-Pattern/Entry/RiskManagement and the product strategies). API version in the code: `MZpackStrategyBase.Version = "2.4.17"`.
+Pattern/Entry/RiskManagement and the product strategies). API version: `MZpackStrategyBase.Version = "2.4.18"`.
+Source: product release commit `185d67621238dd0ea1f08c1a358f7c84da0600d4` (2026-10-06).
+See `release-2.4.18.md` for the changes from 2.4.17.
 
 ## Base classes and hierarchy
 - `MZpackStrategyBase : StrategyRenderBase` — the NinjaScript host. No abstract members;
@@ -38,6 +40,11 @@ price helpers `RoundToTickSize`, `PriceAddTicks`, `PriceDiffTicks`,
 Lifecycle: `OnStateChange()` (override with a `base` call) — stages
 `SetDefaults → Configure → DataLoaded → Historical → Terminated`.
 UI hooks (opt.): `CreateControlPanelElements()`, `ControlPanel_Attach/DetachEventHandlers()`.
+Probe hooks on the host: `protected internal virtual void OnConfigureSignalProbe(SignalProbe)` and
+`OnBeforeSignalProbePass(SignalProbe)`. A standalone assembly must use `protected override` for both.
+Dashboard properties: `ShowPatternsDashboard`, `DashboardGridShowLegend`, `DashboardGridViewPosition`,
+`DashboardGridViewOffset`, `DashboardGridViewRowHeight`, `DashboardTheme`, `DashboardShowSignalHint` and
+serialized hidden `DashboardCollapsedNodes`. See `../templates/README.md`.
 
 ## Strategy (algo) — for overriding in a subclass
 ```csharp
@@ -89,20 +96,43 @@ Helpers: `ResolveDirection(dir, allowed)`, `IsDetermined(dir)`,
 `bool IsMarketEventSupported(MarketDataSource)`.
 Constructor: `Signal(Strategy strategy, MarketDataSource source, SignalCalculate calculate, bool isReset)`.
 
-Configuring what the indicator must calculate in API 2.4.17:
-Some indicator data is calculated only when the matching setting is on — footprint absorptions, imbalance S/R
-zones, bar value area, session value area, delta rate and so on. A signal that reads such data must configure
-the matching `StrategyFootprintIndicator` instance in the host, otherwise it reads nothing and looks like a
-signal that never fires. Data that is always
-calculated (`bar.Delta`, `bar.Volume`, the per-level rows, `bar.POC`, `bar.MinDelta`/`MaxDelta`, `session.POCs`)
-needs no extra configuration.
+### Declaring required calculations (API 2.4.18)
 ```csharp
-var footprint = GetIndicator(FOOTPRINT) as StrategyFootprintIndicator;
-if (footprint != null)
-    footprint.ShowAbsorption = true;
+public virtual void DeclareRequirements(); // override in a custom Signal
+protected void Require(IFootprintIndicator indicator, FootprintCapabilities caps);
+protected void Require(IVolumeProfileIndicator indicator, VolumeProfileCapabilities caps);
+protected void Require(IBigTradeIndicator indicator, BigTradeCapabilities caps);
+protected void Require(IMarketDepthIndicator indicator, MarketDepthCapabilities caps);
+protected void Require(IVolumeDeltaIndicator indicator, VolumeDeltaCapabilities caps);
 ```
-> `DeclareRequirements()` and `Require(...)` are not available in API 2.4.17. Do not generate them for this
-> skill release.
+Interfaces are in `MZpack`; capability enums are in `MZpack.NT8.Algo`. Requirements are merged per concrete
+`TickIndicator` instance. A nonzero requirement against null or an unrelated implementation throws.
+The framework calls the declaration after resolving the signal's indicator references, then applies all
+requirements from entry/exit signal trees, filter trees and probe signals inside `Strategy.Initialize`.
+```csharp
+public override void DeclareRequirements()
+{
+    Require(footprint, FootprintCapabilities.Absorptions | FootprintCapabilities.BarValueArea);
+}
+```
+
+| Enum | Available flags |
+|---|---|
+| `FootprintCapabilities` | `None`, `Imbalances`, `ImbalanceSRZones`, `Absorptions`, `AbsorptionSRZones`, `BarValueArea`, `BarMultiplePOC`, `UnfinishedAuction`, `RatioNumbers`, `AbsoluteDeltaAverage`, `DeltaRate`, `DeltaDivergence`, `SessionValueArea` |
+| `VolumeProfileCapabilities` | `None`, `ProfileVWAP`, `ProfileVWAPDeviation` |
+| `BigTradeCapabilities` | `None`, `Icebergs`, `Aggression` |
+| `MarketDepthCapabilities` | `None`, `OverallLiquidity`, `LiquidityMigration` |
+| `VolumeDeltaCapabilities` | `None` only; also covers Delta Divergence |
+
+The applier only enables calculation or raises a minimum: `BarMultiplePOC` ensures `ShowBarPOCCount >= 2`;
+`AbsorptionSRZones` implies `Absorptions`; `ImbalanceSRZones` does not turn on imbalance markers.
+`ProfileVWAPDeviation` implies VWAP and upgrades `None`/`Dynamic` to `DynamicStdDev1`. An explicitly chosen
+`VWAPMode.Last` is kept and produces a diagnostic; set a dynamic standard deviation mode in the host if
+that signal needs deviation. Detection thresholds, algorithm choices and display filters remain host settings.
+
+Unconditional data needs no requirement: `bar.Delta`, `bar.Volume`, per-level rows, `bar.POC`,
+`bar.MinDelta`/`MaxDelta`, footprint `session.POCs`, volume-profile POC/VAH/VAL and the realtime order book.
+Built-in signals without their own declaration require explicit host settings; see `release-2.4.18.md`.
 
 ## Signal probe — observing signals outside the pattern tree
 An optional second evaluation path, for observation and statistics only; it never takes part in trading.
@@ -120,9 +150,23 @@ Factories, not instances: `Initialize` rebuilds the probe on every call, and the
 instances of its own — the ones in the tree are stateful and evaluating them twice would corrupt the pattern.
 Whether a signal also trades is worked out from the pattern and recorded as `ProbeEvent.IsInTree`, so listing a
 disabled signal is how you find out what it WOULD have given.
-Results: `Strategy.SignalProbes` (one per pattern), each with `IReadOnlyList<ProbeEvent> Events` and a
-`Diagnostics` summary. Hook: `protected internal virtual void OnBeforeSignalProbePass(SignalProbe)` on
-`MZpackStrategyBase` — override to settle shared state the probe would otherwise touch first.
+Results: `Strategy.SignalProbes` (one per pattern); `Events` and `Outcomes` are index-aligned read-only lists.
+`ProbeEvent` carries `Time` (bar close), `EventTime` (market event), `BarIdx`, `SignalName`, `IsInTree`,
+`Direction` (+1/-1), `Price`, bar statistics, ranks and session/profile context. Missing ranks/distances are
+`NaN`. `IsInTree` matches runtime signal type in that pattern's signal/filter trees, not its name or settings.
+`ProbeOutcome` exposes first-touch arrays `FavTime`/`AdvTime` and `FavBar`/`AdvBar`, `Step`, `Levels`,
+`FirstTickPrice`, `TicksAtHorizon`, `MFE`, nonpositive `MAE`, `BarsToMFE`, `IsOpen` and `Censored`.
+`ProbeCensored`: `None`, `SessionEnd`, `EndOfData`.
+
+Configure in `OnConfigureSignalProbe`: `HorizonBars` (default 40), `LadderTicks` (0 = derive), optional
+`CanRecord`, `ResetRankScope`, `VolumeRankOf`, `DeltaRankOf` and `UndeclaredAlternativesOf` callbacks.
+Queries: `Diagnostics`, `IsEnabled`, `IsGated`, `SkippedCount`, `FirstRecordedSession`, `TouchedCount`,
+`ResolvedLadderTicks`, `ResolvedLadderStep`, `ResolvedLadderLevels`, `GetEffectiveCurrentBarIndex()`.
+Call `CloseOpenOutcomes()` before `BuildReport(int stopLossTicks, int profitTargetTicks, string headerInfo)`
+at termination. `Clear()` discards observations. `ProbeDumpFormat.EventsHeader(levels, step)` and
+`EventRow(ProbeEvent, ProbeOutcome)` format CSV; `ParamsHeader`, `WindowHeader`, `StrategyHeader`,
+`FiltersHeader` define metadata sections but do not write a file.
+See `signal-probe.md` for factory identity, routing, outcome semantics and report limits.
 
 ## Entry (declarative entry and per-trade risk)
 ```csharp
@@ -168,7 +212,11 @@ new RiskManagement(strategy) {
 
 ## Indicators and data
 - `StrategyFootprintIndicator` → `.FootprintBars.TryGetValue(barIdx, out IFootprintBar bar)`.
-- `StrategyVolumeProfileIndicator`, `StrategyBigTradeIndicator` → `.Trades` (`ITrade`).
+- `StrategyVolumeProfileIndicator` → `.Profiles`; `StrategyBigTradeIndicator` → `.Trades` (`ITrade`).
+- `StrategyBigTradeIndicator.DomPressureSignaturePassesFilter(ITrade)` gates on the current DOM-pressure
+  signature filters. Export the same result as `IndValue.DomPressurePassesFilter` (1/0).
+- `StrategyMarketDepthIndicator` / `IMarketDepthIndicator.TicksPerLevel`: aggregation changes the keys and
+  ranges of historical `Blocks`; `RealtimeBids` / `RealtimeOffers` retain per-tick prices. See `release-2.4.18.md`.
 - `ICandle` (via `host.GetCandle(ago)`): `IsBullish()`, `IsBearish()`, `Low`, `High`, `LowerBody`, `UpperBody`.
 - `IFootprintBar`: POC, Delta, DeltaPercentage, DeltaChange, DeltaRate, MinDelta, MaxDelta,
   Imbalances, Absorptions, ImbalanceSRZones, AbsorptionSRZones, BuyVolumes, SellVolumes,
@@ -196,8 +244,28 @@ Wire it up in `State.DataLoaded`: create → `DataSet.Schema = ...` → `Registe
   or `DataSchema.LoadFromXml(this, path)`.
 Types: `Export`, `ExportArgs`, `DataSchema`, `DataSet`, `IndValue`, `ValueKind`,
 `ChartObjectDescriptor`, `MapItem`, `DrawingTool`, `ExportTemporality` (Historical|Realtime),
-`ExportGranularity` (Bar|Tick), `ExportDataSource` (Level1|Level2), `CalculateExportValueDelegate`.
+`ExportGranularity` (Bar|Tick|Update), `ExportDataSource` (Level1|Level2|Custom), `CalculateExportValueDelegate`.
+`ExportArgs.IsExportWhileCollecting` writes rows during collection; set `FlushIntervalMs` (0 = each row)
+for flush batching. For live appending use `ExportTemporality.Realtime`. The writer permits concurrent
+readers, initializes the file once per run and retains collected rows in `DataSet`.
+`IsBatch` separates run files. Historical exports finish at `State.Transition`; realtime exports finish at
+`State.Terminated`. See `../samples/export/README.md` for the two sample hosts.
 Other: `EnableBacktesting=true` (historical export), `GetBasePath(this)` (base path for files).
 
-> The source of truth is `MZpack.NT8.Pro.dll` and the source in `…\source\repos\mzpack`. For full
-> signatures of the missing types, see the corresponding .cs in `MZpack.NT8\Algo`.
+## Released built-in signals
+`MZpack.NT8.Algo.Signals` includes `FootprintImbalanceSignal`, `FootprintAbsoprtionSignal` (public spelling),
+`BigTradeSignal`, `RelativeToProfileSignal` and `DOMImbalanceSignal`. These are API classes distinct from
+similarly named product-strategy snapshots in `samples/`. Constructors and required settings:
+`release-2.4.18.md`.
+
+## Filter calibration
+`FilterCalibration` and `CalibrationBar` / `CalibrationBucket` / `CalibrationSession` are in
+`MZpack.NT8.Algo`. Constructor: `(int baselineSessions, double percentile, IntradayBuckets buckets,
+double sessionOutlierTolerance)`. `IntradayBuckets`: `Off`, `Minutes60`, `Minutes30`.
+`Build(IEnumerable<CalibrationBar>, IEnumerable<TradingTime>, DateTime currentSessionBegin, string headerInfo)`
+uses completed prior sessions only. Query `IsReady`, `IsWarmingUp`, `NotReadyReason`, `GetMinVolume(time)` /
+`GetMinDelta(time)` (also overloads with percentile), `GetVolumeRank(time, volume)` / `GetDeltaRank(time, delta)`.
+Ranks return `NaN` when unavailable. Full input contract and readiness rules: `filter-calibration.md`.
+
+> The source of truth is the matching installed `MZpack.NT8.Pro.dll` and the immutable product source ref
+> in `skill-manifest.json`. For full signatures, see the corresponding .cs in `MZpack.NT8\Algo` at that ref.

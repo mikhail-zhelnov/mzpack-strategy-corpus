@@ -10,6 +10,8 @@ What it demonstrates:
 - a minimal, clean signal — the best "hello world";
 - the calculation moment: `SignalCalculate.OnBarClose`;
 - working with candles through the host: `GetCandle(1)` (closed), `GetCandle(2)` (previous), `IsBullish()/IsBearish()`, `Low/High`;
-- the bar member `IFootprintBar.Delta`;
-- the host's shared filter `CheckBarFilters(...)`;
+- injection of `StrategyFootprintIndicator` through the constructor; `IFootprintBar.Delta` is
+  unconditional, so this signal needs no capability declaration;
+- the host's shared filter `CheckBarFilters(...)` with filter mode and percentile in API 2.4.18;
+  these properties and the `FootprintAction` cast must be adapted in a standalone host;
 - completion: `ResolveDirection` → `IsDetermined` → filling in `Direction/Time/EntryPrice/ChartRange/Description`.

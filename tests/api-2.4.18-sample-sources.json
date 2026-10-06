@@ -3,6 +3,7 @@
   "samples/big-trade/BigTradeSignal.cs": "MZpack.NT8/Algo/Strategies/GhostResistance/BigTradeSignal.cs",
   "samples/custom-plots/CustomPlots.cs": "MZpack.NT8/Algo/Samples/Built-in/CustomPlots.cs",
   "samples/delta-divergence/DeltaDivergenceSignal.cs": "MZpack.NT8/Algo/Strategies/FootprintAction/DeltaDivergenceSignal.cs",
+  "samples/export/Data_Export.cs": "MZpack.NT8/Algo/Strategies/Data_Export/Data_Export.cs",
   "samples/export/DrawingObjects_Export.cs": "MZpack.NT8/Algo/Strategies/DrawingObjects_Export/DrawingObjects_Export.cs",
   "samples/extensions/BarCloseTarget.cs": "MZpack.NT8/Algo/Extensions/Exits/BarCloseTarget.cs",
   "samples/extensions/BarHiLoTrail.cs": "MZpack.NT8/Algo/Extensions/Trails/BarHiLoTrail.cs",

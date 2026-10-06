@@ -19,25 +19,29 @@ on — footprint absorptions, imbalance S/R zones, bar value area, session value
 and others. If the indicator was never asked to calculate it, the collection is empty on every
 single bar.
 
-**Fix.** In API 2.4.17 configure the indicator in the host, in `State.Configure`, before
-`Strategy.Initialize(...)`:
+**Fix.** In API 2.4.18 pass the indicator into your custom signal's constructor, keep it in a field
+and declare the data that signal reads:
 
 ```csharp
-var footprint = GetIndicator(FOOTPRINT) as StrategyFootprintIndicator;
-if (footprint != null)
+public override void DeclareRequirements()
 {
-    footprint.ShowAbsorption = true;          // before reading bar.Absorptions
-    // footprint.ShowImbalanceSRZones = true; // before reading imbalance S/R zones
+    Require(footprint, FootprintCapabilities.Absorptions);
+    // Use FootprintCapabilities.ImbalanceSRZones when reading imbalance S/R zones.
 }
 ```
 
-Enable the setting for what you **read**, on the indicator instance owned by this strategy.
+`Strategy.Initialize(...)` applies the declarations from trading signals, filters and probe-only signals.
+Requirements belong to the actual indicator instance; declaring them on a different footprint does not help.
+They enable calculations but do not select thresholds or detection algorithms.
+Built-in signals without declarations still need their calculation settings enabled in the host; see
+`release-2.4.18.md`.
 
 Data that is always calculated needs no extra configuration: `bar.Delta`, `bar.Volume`, the per-level
 rows, `bar.POC`, `bar.MinDelta` / `MaxDelta`, `session.POCs`.
 
-> `DeclareRequirements()` / `Require(...)` belong to a later API and must not be generated for this
-> 2.4.17-compatible skill. If a signal has never fired, check the host's indicator configuration first.
+> An explicit `VWAPMode.Last` is preserved even when `ProfileVWAPDeviation` is required. It produces
+> a diagnostic and no deviation; select a dynamic standard deviation mode in the host. A never-fired
+> signal is not proof of this cause: inspect its requirements, settings and conditions.
 
 ---
 
@@ -137,8 +141,9 @@ is exactly what makes an observed-only signal measurable.
 **Cause.** The third constructor argument. `SignalCalculate.OnBarClose` evaluates once per closed
 bar; `SignalCalculate.OnEachTick` evaluates continuously.
 
-**Fix.** Set it in the constructor — it is not changeable later, and it is easy to copy the wrong
-one from a sample that had different intent.
+**Fix.** Set `SignalCalculate.OnBarClose` or `OnEachTick` in the constructor. `Calculate` is a public
+settable property, but choose the intended timing before initialization. The fourth constructor argument
+is `isReset`, not `HasPrice`; the latter is a separate property.
 
 ---
 
@@ -195,10 +200,10 @@ tools* workload, or Visual Studio Community.
 
 ## 12. The DLL builds but NinjaTrader does not see the strategy
 
-**Cause.** In almost every case: **NinjaTrader was running during the build.** While it runs it
-holds the assemblies in `bin\Custom`, so the `DeployToNinjaTrader` step cannot write your DLL over
-the old one — and the build still reports success. A clean build and no strategy in the list is
-this, nearly every time.
+**Cause.** A running NinjaTrader may hold the destination assembly in `bin\Custom`, so the
+`DeployToNinjaTrader` step cannot replace it. The MSBuild `Copy` target then fails even if compilation
+succeeded. Compare the built and deployed DLL timestamps; a successful compile can leave the previous
+DLL on the platform.
 
 The other cause is that deploy was switched off with `-p:DeployToNinjaTrader=false`, which is
 correct for CI and for building on a machine without NT8, and wrong here.
@@ -230,6 +235,55 @@ through the constructor from the host.
 
 **Fix.** Namespace = project name. Host class and assembly = strategy name. Signals in
 `<Project>.Signals`, one file per signal, `Signal` suffix.
+
+---
+
+## 15. A realtime CSV stays empty while the strategy runs
+
+**Cause.** `ExportTemporality.Realtime` selects the data phase but does not turn on file appending.
+The default `ExportArgs.IsExportWhileCollecting=false` writes the realtime dataset at termination.
+The built-in `Data_Export` switches are per indicator group and also require realtime temporality.
+
+**Fix.** Set `IsExportWhileCollecting=true` for that export. `FlushIntervalMs=0` makes each row visible;
+a positive interval batches flushes as new rows arrive. `IsBatch` keeps runs in separate files; without
+it the selected file is initialized once for the new run. Collection still retains rows in `DataSet`.
+See `../samples/export/README.md`.
+
+---
+
+## 16. A probe hook does not compile in a standalone strategy
+
+**Cause.** The product host overrides a `protected internal` hook inside the same assembly. That
+access modifier cannot be copied into a subclass in a different assembly.
+
+**Fix.** Use the external-subclass form:
+
+```csharp
+protected override void OnConfigureSignalProbe(SignalProbe probe)
+{
+    base.OnConfigureSignalProbe(probe);
+    probe.HorizonBars = 40;
+    probe.LadderTicks = 100;
+}
+```
+
+Use `protected override` for `OnBeforeSignalProbePass` too. Factories create a fresh probe each time
+`Initialize` runs, so configure through the hook rather than retaining an old probe reference.
+See `signal-probe.md`.
+
+---
+
+## 17. A DOM-pressure condition passes although its marker is filtered out
+
+**Cause.** Nonzero `ITrade.DomPressureVolume` alone does not say that the current signature passes
+the configured DOM-pressure display filters. Pressure detection works on live data or Market Replay;
+ordinary historical data does not reconstruct it.
+
+**Fix.** Use `StrategyBigTradeIndicator.DomPressureSignaturePassesFilter(trade)` when those filters
+are part of the entry rule, or export `IndValue.DomPressurePassesFilter` (1/0). A zero result says that
+the trade fails the gate; it does not supply a reason for missing source data. Tune the indicator's
+DOM-pressure parameters explicitly; there is no `BigTradeCapabilities.DomPressure` flag in 2.4.18.
+See `release-2.4.18.md`.
 
 ---
 

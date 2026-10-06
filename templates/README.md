@@ -24,5 +24,15 @@ your own solution folder, then rename the project/namespace/classes.
 - Built-in pattern dashboard; custom rendering is NOT needed — the grid is built from the signals tree.
 - Enable in `SetDefaults`: `ShowPatternsDashboard=true`, `DashboardGridShowLegend=true`,
   `DashboardGridViewPosition=DashboardViewPosition.Top`, `DashboardGridViewOffset=-30`.
+  The offset is a distance from the docked edge: rendering uses its absolute value,
+  with the sign derived from Top/Bottom. The template therefore sits 30 px below Top.
+- API 2.4.18 adds a compact dashboard header with panel/tree visibility, Top/Bottom,
+  theme and signal-hint controls. Its Layout overlay changes offset and row height;
+  arrow movement is clamped to the chart, and row height is limited to 10..100 px
+  (default 24).
+- Clicking a legend node with children collapses its subtree in the legend and grid;
+  its aggregate direction cell remains visible. `DashboardCollapsedNodes` persists
+  the structural paths across reinitialization and template serialization.
 - For the legend, set a `Name` on EVERY signal (in `CreateEntryPattern`).
-- Dashboard toggles are surfaced on the Control Panel via `[ControlPanel]`.
+- Dashboard toggles are also surfaced on the Control Panel via `[ControlPanel]`.
+  See [API 2.4.18 changes](../docs/release-2.4.18.md) for the dashboard properties.
